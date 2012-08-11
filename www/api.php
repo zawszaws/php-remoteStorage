@@ -10,9 +10,12 @@ require_once "../lib/OAuth/RemoteResourceServer.php";
 require_once "../lib/Storage/RemoteStorageRequest.php";
 require_once "../lib/Storage/RemoteStorageException.php";
 
+$remoteStorageVersion = "remoteStorage.2012.10";
+
 $response = new HttpResponse();
 $response->setHeader("Content-Type", "application/json");
 $response->setHeader("Access-Control-Allow-Origin", "*");
+$response->setHeader("X-RemoteStorage-Version", $remoteStorageVersion);
 
 try { 
     $config = new Config(dirname(__DIR__) . DIRECTORY_SEPARATOR . "config" . DIRECTORY_SEPARATOR . "remoteStorage.ini");

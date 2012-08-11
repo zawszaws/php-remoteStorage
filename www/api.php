@@ -7,15 +7,13 @@ require_once "../lib/Http/HttpRequest.php";
 require_once "../lib/Http/HttpResponse.php";
 require_once "../lib/Http/IncomingHttpRequest.php";
 require_once "../lib/OAuth/RemoteResourceServer.php";
+require_once "../lib/Storage/RemoteStorage.php";
 require_once "../lib/Storage/RemoteStorageRequest.php";
 require_once "../lib/Storage/RemoteStorageException.php";
 
 $remoteStorageVersion = "remoteStorage.2012.10";
 
 $response = new HttpResponse();
-$response->setHeader("Content-Type", "application/json");
-$response->setHeader("Access-Control-Allow-Origin", "*");
-$response->setHeader("X-RemoteStorage-Version", $remoteStorageVersion);
 
 try { 
     $config = new Config(dirname(__DIR__) . DIRECTORY_SEPARATOR . "config" . DIRECTORY_SEPARATOR . "remoteStorage.ini");
@@ -23,6 +21,8 @@ try {
     $request = RemoteStorageRequest::fromIncomingHttpRequest(new IncomingHttpRequest());
 
     $rs = new RemoteResourceServer($config->getValue("oauthTokenEndpoint"));
+
+    $remoteStorage = new RemoteStorage($config, $request);
 
     if("OPTIONS" === $request->getRequestMethod()) {
         $response->setHeader("Access-Control-Allow-Origin", "*");
@@ -33,173 +33,46 @@ try {
         if ($request->getRequestMethod() != 'HEAD' && $request->getRequestMethod() != 'GET') {
             throw new RemoteStorageException("method_not_allowed", "only GET and HEAD requests allowed for public files");
         }
-
         if($request->isDirectoryRequest()) {
             throw new RemoteStorageException("invalid_request", "not allowed to list contents of public folder");
         }
         // public but not listing, return file if it exists...
-        $file = realpath($rootDirectory . $request->getPathInfo());
-        if(FALSE === $file || !is_file($file)) {
-            throw new RemoteStorageException("not_found", "file not found");
-        }
-        if(function_exists("xattr_get")) {
-            $mimeType = xattr_get($file, 'mime_type');
-        } else {
-            $mimeType = "application/json";
-        }
-        $response->setHeader("Content-Type", $mimeType);
-        /* XXX we should better lock that file here */
-        $etag = getETag($file);
-        $response->setHeader("ETag: " . $etag);
-
-        $outputContents = true;
-        if ($request->getRequestMethod() == 'HEAD') {
-            $outputContents = false;
-        }
-
-        if (doIfMatchChecks($etag, $request, $response)) {
-            $outputContents = false;
-        }
-
-        if ($outputContents)
-            $response->setContent(file_get_contents($file));
+        $response = $remoteStorage->getFile($request->getPatInfo());
     } else if ($request->headerExists("HTTP_AUTHORIZATION")) {
         // not public or public with Authorization header
         $token = $rs->verify($request->getHeader("HTTP_AUTHORIZATION"));
 
         // handle API
+        $ro = $request->getResourceOwner();
+        if($ro !== $token['resource_owner_id']) {
+            throw new RemoteStorageException("access_denied", "storage path belongs to other user");
+        }
+
         switch($request->getRequestMethod()) {
             case "GET":
             case "HEAD":
-                $ro = $request->getResourceOwner();
-                if($ro !== $token['resource_owner_id']) {
-                    throw new RemoteStorageException("access_denied", "storage path belongs to other user");
-                }
-
                 requireScope($request->getCategory(), "r", $token['scope']);
-
                 if($request->isDirectoryRequest()) {
-                    // return directory listing
-                    $dir = realpath($rootDirectory . $request->getPathInfo());
-                    $entries = array();
-                    if(FALSE !== $dir && is_dir($dir)) {
-                        $cwd = getcwd();
-                        chdir($dir);
-                        foreach(glob("*", GLOB_MARK) as $e) {
-                            //$entries[basename($e)] = filemtime($e);
-                            $entries[$e] = filemtime($e);
-                        }
-                        chdir($cwd);
-                    }
-                    if ($request->getRequestMethod() != 'HEAD')
-                        $response->setContent(json_encode($entries, JSON_FORCE_OBJECT));
+                    $response = $remoteStorage->getDir($request->getPathInfo());
                 } else { 
-                    // accessing file, return file if it exists...
-                    $file = realpath($rootDirectory . $request->getPathInfo());
-                    if(FALSE === $file || !is_file($file)) {
-                        throw new RemoteStorageException("not_found", "file not found");
-                    }
-                    if(function_exists("xattr_get")) {
-                        $mimeType = xattr_get($file, 'mime_type');
-                    } else {
-                        $mimeType = "application/json";
-                    }
-                    $response->setHeader("Content-Type", $mimeType);
-                   
-                    $etag = getETag($file);
-                    /* XXX we should better lock that file here */
-                    $response->setHeader("ETag: " . $etag);
-                    
-                    if (doIfMatchChecks($etag, $request, $response))
-                        break;
-
-                    if ($request->getRequestMethod() != 'HEAD')
-                        $response->setContent(file_get_contents($file));
+                    $response = $remoteStorage->getFile($request->getPathInfo());
                 }
                 break;
-    
             case "PUT":
-                $ro = $request->getResourceOwner();
-                if($ro !== $token['resource_owner_id']) {
-                    throw new RemoteStorageException("access_denied", "storage path belongs to other user");
-                }
-
-                $userDirectory = $rootDirectory . DIRECTORY_SEPARATOR . $ro;
-                // FIXME: only create when it does not already exists...
-                createDirectories(array($rootDirectory, $userDirectory));
-
                 requireScope($request->getCategory(), "rw", $token['scope']);
-
-                if($request->isDirectoryRequest()) {
-                    throw new RemoteStorageException("invalid_request", "cannot store a directory");
-                } 
-
-                // upload a file
-                $file = $rootDirectory . $request->getPathInfo();
-                $dir = dirname($file);
-                if(FALSE === realpath($dir)) {
-                    createDirectories(array($dir));
-                }
-
-                /* XXX we should better lock that file here */
-                $etag = file_exists($file) ? getETag($file) : NULL;
-                if (doIfMatchChecks($etag, $request, $response)) {
-                    break;
-                }
-                
-                $contentType = $request->headerExists("Content-Type") ? $request->getHeader("Content-Type") : "application/json";
-                file_put_contents($file, $request->getContent());
-                // store mime_type
-                if(function_exists("xattr_set")) {
-                    xattr_set($file, 'mime_type', $contentType);
-                }
-
+                $response = $remoteStorage->putFile($request->getPathInfo());
                 break;
 
             case "DELETE":
-                $ro = $request->getResourceOwner();
-                if($ro !== $token['resource_owner_id']) {
-                    throw new RemoteStorageException("access_denied", "storage path belongs to other user");
-                }
-
-                $userDirectory = $rootDirectory . DIRECTORY_SEPARATOR . $ro;
-
                 requireScope($request->getCategory(), "rw", $token['scope']);
-
-                if($request->isDirectoryRequest()) {
-                    throw new RemoteStorageException("invalid_request", "directories cannot be deleted");
-                }
-
-                $file = $rootDirectory . $request->getPathInfo();            
-                if(!file_exists($file)) {
-                    throw new RemoteStorageException("not_found", "file not found");
-                }
-                if(!is_file($file)) {
-                    throw new RemoteStorageException("invalid_request", "object is not a file");
-                }
-                
-                /* XXX we should better lock that file here */
-                $etag = file_exists($file) ? getETag($file) : NULL;
-                if (doIfMatchChecks($etag, $request, $response)) {
-                    break;
-                }
-                
-                if (@unlink($file) === FALSE) {
-                    throw new Exception("unable to delete file");
-                }
+                $response = $remoteStorage->deleteFile($request->getPathInfo());
                 break;
             default:
-                // ...
-                break;
-
+                throw new RemoteStorageException("method_not_allowed", "unsupported request method");
         }
 
     } else {
-        $response->setStatusCode(401);
-        $response->setHeader("WWW-Authenticate", sprintf('Bearer realm="Resource Server"'));
-        $response->setContent(json_encode(array("error"=> "not_authorized", "error_description" => "need authorization to access this service"), JSON_FORCE_OBJECT));
-        $logger = new Logger($config->getValue('logDirectory') . DIRECTORY_SEPARATOR . "remoteStorage.log");
-        $logger->logFatal("not_authorized: need authorization to access this service");
+        throw new VerifyException("invalid_token", "no token provided");
     }   
 } catch (Exception $e) {
     $config = new Config(dirname(__DIR__) . DIRECTORY_SEPARATOR . "config" . DIRECTORY_SEPARATOR . "remoteStorage.ini");
@@ -231,55 +104,11 @@ try {
 
 }
 
+$response->setHeader("Access-Control-Allow-Origin", "*");
+$response->setHeader("X-RemoteStorage-Version", $remoteStorageVersion);
 $response->sendResponse();
 
-function createDirectories(array $directories) { 
-    foreach($directories as $d) { 
-        if(!file_exists($d)) {
-            if (@mkdir($d, 0775, TRUE) === FALSE) {
-                throw new Exception("unable to create directory");
-            }
-        }
-    }
-}
-
-function getETag($file) {
-    $fs = stat($file);
-    return sprintf('"%x-%x-%s"', $fs['ino'], $fs['size'],
-                   base_convert(str_pad($fs['mtime'], 16, "0"), 10, 16));
-}
-
-/* supply NULL for $etag if file is not present */
-function doIfMatchChecks($etag, $request, $response) {
-    /* XXX better use an exception? */
-    if ($request->headerExists("If-Match")) {
-        /* XXX the client could specify multiple ETags separated by comma */
-        $match = $request->getHeader("If-Match");
-        if (($match === '*' && $etag !== NULL) ||
-                    ($match !== '*' && $match === $etag)) {
-            return FALSE;
-        }
-        $response->setStatusCode("412");
-        return TRUE;
-    } else if ($request->headerExists("If-None-Match")) {
-        /* XXX the client could specify multiple ETags separated by comma */
-        $match = $request->getHeader("If-None-Match");
-        if (($match === '*' && $etag === NULL) ||
-                ($match !== '*' && $match !== $etag)) {
-            return FALSE;
-        }
-        $method = $request->getRequestMethod();
-        if ($method === 'HEAD' || $method === 'GET') {
-            $response->setStatusCode('304');
-        } else {
-            $response->setStatusCode('412');
-        }
-        return TRUE;
-    } else {
-        return FALSE;
-    }
-}
-
+// FIXME: move this to RemoteResourceServer class!
 function requireScope($collection, $permission, $grantedScope) {
     if(!in_array($permission, array("r", "rw"))) {
         throw new Exception("unsupported permission requested");

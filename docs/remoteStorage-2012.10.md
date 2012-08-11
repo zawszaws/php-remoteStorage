@@ -50,6 +50,8 @@ containing the minimal required implemtnation details.
 The goal of this specification is to specify everything needed for a developer
 to create their own _remoteStorage_ compatible service.
 
+**FIXME**: talk about ETag, file locking and versioning.
+
 # remoteStorage API
 The API did not change since the last versions of the specification. This 
 specification however will include (non normative) examples of each of the 

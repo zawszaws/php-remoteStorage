@@ -75,8 +75,9 @@ to the implementor to decide about this. The only requirements are that the
 *storageRoot* is bound to the authenticated user and that there is some way to 
 have a `public` directory under this root belonging to the user.
 
-All calls to either of the above `GET`, `PUT`, `DELETE` and `OPTIONS` MUST be 
-to the *storageRoot* or directories or files under this directory, for instance:
+All calls to either of the above `GET`, `PUT`, `DELETE`, `HEAD` and `OPTIONS` 
+MUST be to the *storageRoot* or directories or files under this directory, for 
+instance:
 
     https://www.example.org/remoteStorage/api/john.doe/calendar/2012/10/14
 
@@ -196,7 +197,8 @@ implement the timestamping of directories here depending on the file storage
 backend.
 
 In addition, the `Content-Type` of the file MUST be retained and given back to
-the client on file retrieval. This is especially important for `public` files.
+the client on file retrieval. This is especially important for `public` files 
+as they are intended for more than just application data.
 
 In case a `PUT` request specifies a directory, i.e. the URL ends with a 
 forward slash (`/`), an error needs to be given back to the client:
@@ -259,6 +261,14 @@ ONLY a file, not a directory listing, is allowed without authorization. All
 other requests need authorization as if they were not public. Requesting a file 
 list with `GET` while the request is authorized is possible.
 
+In case a request is made to the `public` directory and this is not either a 
+`GET` or `HEAD` request, the following error MUST be returned:
+
+    HTTP/1.1 405 Method Not Allowed
+    Content-Type: application/json
+
+    {"error":"method_not_allowed","error_description":"only GET and HEAD requests allowed for public files"}
+
 ## Cross Origin Headers
 The `OPTIONS` request should result in a response that tells web browsers that 
 cross origin requests are allowed.
@@ -272,6 +282,8 @@ cross origin requests are allowed.
     Access-Control-Allow-Origin: *
     Access-Control-Allow-Headers: Content-Type, Authorization, Origin, Content-Range, Content-Length, If-Match, If-None-Match
     Access-Control-Allow-Methods: GET, PUT, DELETE
+
+**FIXME**: should we specify HEAD and OPTIONS as well?
 
 ## Error Handling
 Some of the errors that can occur were already shown in the previous sections. 

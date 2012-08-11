@@ -19,6 +19,8 @@ class RemoteStorageException extends Exception {
                 return 404;
             case "invalid_request":
                 return 400;
+            case "method_not_allowed":
+                return 405;
             default:
                 return 400;
         }

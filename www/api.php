@@ -29,12 +29,13 @@ try {
         $response->setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, Origin, If-None-Match, If-Match");
         $response->setHeader("Access-Control-Allow-Methods", "GET, PUT, DELETE, HEAD");
     } else if($request->isPublicRequest() && !$request->headerExists("HTTP_AUTHORIZATION")) { 
-        // only GET of item is allowed, nothing else
+        // only GET and HEAD of item is allowed, nothing else
+        if ($request->getRequestMethod() != 'HEAD' && $request->getRequestMethod() != 'GET') {
+            throw new RemoteStorageException("method_not_allowed", "only GET and HEAD requests allowed for public files");
+        }
+
         if($request->isDirectoryRequest()) {
             throw new RemoteStorageException("invalid_request", "not allowed to list contents of public folder");
-        }
-        if ($request->getRequestMethod() != 'HEAD' && $request->getRequestMethod() != 'GET') {
-            throw new RemoteStorageException("invalid_request", "only GET and HEAD allowed");
         }
         // public but not listing, return file if it exists...
         $file = realpath($rootDirectory . $request->getPathInfo());

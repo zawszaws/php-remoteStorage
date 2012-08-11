@@ -101,12 +101,14 @@ instead.
 
     HTTP/1.1 200 OK
     Content-Type: application/json
+    ETag: "d101b2fc6be2e96bed2a6f008f4308ec"
 
     [{"start":"09:00","end":"10:00","activity":"Shopping"},{"start":"12:00","end":"13:00","activity":"Lunch"}]
 
 The `Content-Type` given back to the client MUST be identical to the value that
 was specified while uploading the file using `PUT`, described in the section 
-below.
+below. The `ETag` header SHOULD be present and it is an opaque identifier for
+the content of the file, in accordance with the HTTP protocol.
 
 If a file does not exist, a `404 Not Found` is returned: 
 
@@ -127,6 +129,9 @@ If a file does not exist, a `404 Not Found` is returned:
     Content-Type: application/json
 
     {"14":1344251958,"16":1344249635,"23":1344027615}
+
+For directories, the `ETag` header is usually omitted and it is not
+specified how its value depends on the directory's contents.
 
 If a directory does not exist or even if it is a file, an empty list is 
 returned:
@@ -205,16 +210,19 @@ forward slash (`/`), an error needs to be given back to the client:
 `Content-Type` header needs to contain the version?
 
 In case large files need to be uploaded it SHOULD be possible to upload files 
-in pieces, or chunks. To upload files in chunks two headers need to be 
-specified in the request:
+in pieces. This is done by supplying the `Content-Range` header in accordance
+with the HTTP protocol:
 
-* `X-File-Size`: the file size of the complete file in bytes;
-* `X-File-Chunk`: the current chunk number;
+    PUT /remoteStorage/api/john.doe/calendar/2012/10/24 HTTP/1.1
+    Content-Type: application/json
+    Content-Range: bytes 21010-47021/47022
+    Content-Length: 26012
+    
+    art":"11:00","end":"11:30","ac...
 
-**FIXME**: we should really figure out some better way to do this than 
-providing a proprietary API here... Should use existing approaches!
-
-**FIXME**: use byte ranges instead of chunk numbers
+If the server supports the `Content-Range` header in `PUT` requests, it MUST
+replace the given bytes in the file or extend it. If the file it is extended,
+the skipped parts MUST be filled with zero-bytes.
 
 ## Delete a file
 Files can be deleted using the `DELETE` verb. Directories cannot be deleted. 
@@ -235,6 +243,15 @@ forward slash, an error needs to be given back to the client:
 
     {"error":"invalid_request","error_description":"a directory cannot be deleted"}
 
+## Concurrency Control
+
+In `GET` and `PUT` requests, the server SHOULD understand the following request
+headers and act according to the HTTP protocol, as this is vital to implement
+concurrency control in the clients:
+
+* `If-Match`
+* `If-None-Match`
+
 ## Public Files
 There is a "special" `public` directory in the *storageRoot* indicating that all 
 files under this directory are public. This means the `GET` call for a file and
@@ -253,7 +270,7 @@ cross origin requests are allowed.
 ### Response
 
     Access-Control-Allow-Origin: *
-    Access-Control-Allow-Headers: Content-Type, Authorization, Origin
+    Access-Control-Allow-Headers: Content-Type, Authorization, Origin, Content-Range, Content-Length, If-Match, If-None-Match
     Access-Control-Allow-Methods: GET, PUT, DELETE
 
 ## Error Handling
@@ -427,13 +444,7 @@ A full URL then looks like this:
 
     https://todomvc.example.org/#storage_root=https://www.example.org/remoteStorage/api/john.doe/&authorize_endpoint=https://auth.example.org/oauth2/authorize
 
-# Versioning
-
-**FIXME**: maybe the server should just return a response anyway of whichever 
-version and indicate that in the `Content-Type` header???
-
-**FIXME**: this of course does not really work as **ALL** content types can
-be returned depending on what the user uploaded...
+# Protocol Versioning
 
 The application and the storage server need to negotiate a version of the 
 protocol to use. 
@@ -442,11 +453,11 @@ The following header specifies that you want to use the latest version of the
 specification implemented by the server. This is NOT RECOMMENDED for production
 use:
 
-    Accept: application/json
+    X-RemoteStorage-Version: *
 
-To specify a specific version use the following `Accept` header:
+To specify a specific version use the following value:
 
-    Accept: application/vnd.remoteStorage.2012.10+json
+    X-RemoteStorage-Version: remoteStorage.2012.10
 
 If the request version is not supported by the server an error message SHOULD
 to be sent back to the client indicating this:
@@ -455,6 +466,12 @@ to be sent back to the client indicating this:
     Content-Type: application/json
     
     {"error":"unsuppored_version","error_description":"the requested version is not supported"}
+
+Additionally, every server response MUST contain the version header (even if
+the request did not contain such a header) indicating the remoteStorage protocol
+version used:
+
+    X-RemoteStorage-Version: remoteStorage.2012.10
 
 # Storage First
 In order to solve the storage discovery problems as mentioned in the 
@@ -491,7 +508,6 @@ specification.
   to implement _remoteStorage_, put it in one section
 * describe the API to register user consent this is a MAY (optimization)
 * apps MUST/SHOULD? be registered in OAuth client table
-* update chunked uploading stuff
 
 # References
 * The OAuth 2.0 Authorization Framework

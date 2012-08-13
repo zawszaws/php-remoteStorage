@@ -85,7 +85,7 @@ class RemoteStorage {
         }
         
         $contentType = $this->_request->getHeader("Content-Type");
-        if(NULL === $contenType) {
+        if(NULL === $contentType) {
             $contentType = "application/json";
         }
         file_put_contents($file, $this->_request->getContent());
@@ -129,7 +129,7 @@ class RemoteStorage {
     /* supply NULL for $etag if file is not present */
     private function _doIfMatchChecks($etag, &$response) {
         /* XXX better use an exception? */
-        if ($this->_request->headerExists("If-Match")) {
+        if (Null !== $this->_request->getHeader("If-Match")) {
             /* XXX the client could specify multiple ETags separated by comma */
             $match = $this->_request->getHeader("If-Match");
             if (($match === '*' && $etag !== NULL) ||
@@ -138,7 +138,7 @@ class RemoteStorage {
             }
             $response->setStatusCode("412");
             return TRUE;
-        } else if ($this->_request->headerExists("If-None-Match")) {
+        } else if (NULL !== $this->_request->getHeader("If-None-Match")) {
             /* XXX the client could specify multiple ETags separated by comma */
             $match = $this->_request->getHeader("If-None-Match");
             if (($match === '*' && $etag === NULL) ||

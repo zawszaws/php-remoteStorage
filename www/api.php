@@ -28,7 +28,7 @@ try {
         $response->setHeader("Access-Control-Allow-Origin", "*");
         $response->setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, Origin, If-None-Match, If-Match");
         $response->setHeader("Access-Control-Allow-Methods", "GET, PUT, DELETE, HEAD");
-    } else if($request->isPublicRequest() && !$request->headerExists("HTTP_AUTHORIZATION")) { 
+    } else if($request->isPublicRequest() && NULL === $request->getHeader("HTTP_AUTHORIZATION")) { 
         // only GET and HEAD of item is allowed, nothing else
         if ($request->getRequestMethod() != 'HEAD' && $request->getRequestMethod() != 'GET') {
             throw new RemoteStorageException("method_not_allowed", "only GET and HEAD requests allowed for public files");
@@ -38,7 +38,7 @@ try {
         }
         // public but not listing, return file if it exists...
         $response = $remoteStorage->getFile($request->getPatInfo());
-    } else if ($request->headerExists("HTTP_AUTHORIZATION")) {
+    } else if (NULL !== $request->getHeader("HTTP_AUTHORIZATION")) {
         // not public or public with Authorization header
         $token = $rs->verify($request->getHeader("HTTP_AUTHORIZATION"));
 

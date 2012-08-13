@@ -84,7 +84,10 @@ class RemoteStorage {
             return $response;
         }
         
-        $contentType = $this->_request->headerExists("Content-Type") ? $this->_request->getHeader("Content-Type") : "application/json";
+        $contentType = $this->_request->getHeader("Content-Type");
+        if(NULL === $contenType) {
+            $contentType = "application/json";
+        }
         file_put_contents($file, $this->_request->getContent());
         // store mime_type
         if(function_exists("xattr_set")) {

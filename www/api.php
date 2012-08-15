@@ -30,7 +30,7 @@ try {
         $response->setHeader("Access-Control-Allow-Methods", "GET, PUT, DELETE, HEAD");
     } else if($request->isPublicRequest() && NULL === $request->getHeader("HTTP_AUTHORIZATION")) { 
         // only GET and HEAD of item is allowed, nothing else
-        if ($request->getRequestMethod() != 'HEAD' && $request->getRequestMethod() != 'GET') {
+        if ($request->getRequestMethod() !== 'HEAD' && $request->getRequestMethod() !== 'GET') {
             throw new RemoteStorageException("method_not_allowed", "only GET and HEAD requests allowed for public files");
         }
         if($request->isDirectoryRequest()) {
@@ -45,7 +45,7 @@ try {
         // handle API
         $ro = $request->getResourceOwner();
         if($ro !== $token['resource_owner_id']) {
-            throw new RemoteStorageException("access_denied", "storage path belongs to other user");
+            throw new RemoteStorageException("forbidden", "storage path belongs to other user");
         }
 
         switch($request->getRequestMethod()) {

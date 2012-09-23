@@ -271,6 +271,21 @@ In case a request is made to the `public` directory and this is not either a
 
     {"error":"method_not_allowed","error_description":"only GET and HEAD requests allowed for public files"}
 
+
+## Protected Files
+
+*PROPOSAL*.
+
+The difference between `public` and `protected`: public *has* directory listings,
+`protected` has not.
+
+Do we want this behavior? Is there another way? index.html files in `public` 
+directory?
+
+Advantage: exact same behavior with apps working with your private storage and
+with other people's public storage: they both have dir. listings now.
+
+
 ## Cross Origin Headers
 The `OPTIONS` request should result in a response that tells web browsers that 
 cross origin requests are allowed.
@@ -340,6 +355,14 @@ browser needs to fetch a new access token every hour. It is left to the
 implementor to implement access token expiry, however to improve user experience 
 it is RECOMMENDED to use an expiry time between 8 and 24 hours.
 
+*PROPOSAL*: The Authorization Server MAY also support the "authorization code" 
+profile to support non User Agent Based Applications.
+
+Use case: to pull all data from various services together on your remoteStorage
+server so the JS-client can easily fetch your data without the need to pull
+lots of servers from JS, but instead just fetch the data from your remoteStorage
+server.
+ 
 ## Scopes
 The scopes from the OAuth specification are also used in the _remoteStorage_ 
 API. Every application that wants to use _remoteStorage_ needs to have the 

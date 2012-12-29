@@ -6,12 +6,13 @@ require_once 'lib/Storage/RemoteStorage.php';
 require_once 'lib/Storage/RemoteStorageRequest.php';
 require_once 'lib/Http/HttpResponse.php';
 
-class RemoteStorageTest extends PHPUnit_Framework_TestCase {
-
+class RemoteStorageTest extends PHPUnit_Framework_TestCase
+{
     private $_tmpDir;
     private $_c;
 
-    public function setUp() {
+    public function setUp()
+    {
         $this->_tmpDir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . "remoteStorage_" . rand();
         mkdir($this->_tmpDir);
 
@@ -22,11 +23,13 @@ class RemoteStorageTest extends PHPUnit_Framework_TestCase {
         $this->_c->setValue("filesDirectory", $this->_tmpDir);
     }
 
-    public function tearDown() {
+    public function tearDown()
+    {
         $this->_rrmdir($this->_tmpDir);
     }
 
-    public function testDirList() {
+    public function testDirList()
+    {
         $h = new RemoteStorageRequest("https://www.example.org/api.php");
         $h->setPathInfo("/dir/list/");
         $r = new RemoteStorage($this->_c, $h);
@@ -34,8 +37,8 @@ class RemoteStorageTest extends PHPUnit_Framework_TestCase {
         $this->assertEquals("{}", $response->getContent());
     }
 
-    public function testFlow() {
-
+    public function testFlow()
+    {
         // add file
         $h = new RemoteStorageRequest("https://www.example.org/api.php", "PUT");
         $h->setPathInfo("/dir/list/foo");
@@ -66,9 +69,10 @@ class RemoteStorageTest extends PHPUnit_Framework_TestCase {
         $this->assertEquals(200, $response->getStatusCode());
     }
 
-    private function _rrmdir($dir) {
-        foreach(glob($dir . '/*') as $file) {
-            if(is_dir($file)) {
+    private function _rrmdir($dir)
+    {
+        foreach (glob($dir . '/*') as $file) {
+            if (is_dir($file)) {
                 $this->_rrmdir($file);
             } else {
                 unlink($file);
@@ -78,4 +82,3 @@ class RemoteStorageTest extends PHPUnit_Framework_TestCase {
     }
 
 }
-?>

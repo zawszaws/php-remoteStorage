@@ -9,8 +9,8 @@ mkdir -p data/logs
 mkdir -p data/files
 
 # set permissions
-chmod -R o+w data/
-chcon -R -t httpd_sys_rw_content_t data/
+chmod -R o+w data
+chcon -R -t httpd_sys_rw_content_t data
 
 # generate config files
 (

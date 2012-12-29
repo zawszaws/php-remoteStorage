@@ -1,5 +1,7 @@
 <?php
 
+namespace RemoteStorageException;
+
 class RemoteStorageException extends Exception {
 
     private $_description;

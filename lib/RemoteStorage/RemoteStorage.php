@@ -1,5 +1,7 @@
 <?php
 
+namespace RemoteStorage;
+
 class RemoteStorage {
 
     private $_c;

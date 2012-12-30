@@ -8,6 +8,10 @@ use \RestService\Http\IncomingHttpRequest as IncomingHttpRequest;
 use \RestService\Utils\Config as Config;
 use \RestService\Utils\Logger as Logger;
 
+use \RemoteStorage\RemoteStorage as RemoteStorage;
+use \RemoteStorage\RemoteStorageException as RemoteStorageException;
+
+use \OAuth\RemoteResourceServer as RemoteResourceServer;
 use \OAuth\RemoteResourceServerException as RemoteResourceServerException;
 
 $logger = NULL;
@@ -17,8 +21,6 @@ $response = NULL;
 try {
     $config = new Config(dirname(__DIR__) . DIRECTORY_SEPARATOR . "config" . DIRECTORY_SEPARATOR . "remoteStorage.ini");
     $logger = new Logger($config->getSectionValue('Log', 'logLevel'), $config->getValue('serviceName'), $config->getSectionValue('Log', 'logFile'), $config->getSectionValue('Log', 'logMail', FALSE));
-
-    $rootDirectory = $config->getValue('filesDirectory');
 
     $rs = new RemoteResourceServer($config->getSectionValues("OAuth"));
     //$rs->verifyRequest();
@@ -40,25 +42,25 @@ try {
     ################
 
     // get a file
-    $request->matchRest("GET", "/public/:user/:path+", function($user, $path) use ($request, $response, $service) {
+    $request->matchRest("GET", "/public/:user/:path+", function($user, $path) use ($request, $service) {
         // no auth required
         $response = $service->getFile($request->getPathInfo());
     });
 
     // get a directory listing
-    $request->matchRest("GET", "/public/:user/:path+/", function($user, $path) use ($request, $response, $service) {
+    $request->matchRest("GET", "/public/:user/:path+/", function($user, $path) use ($request, $service) {
         // auth required
         $response = $service->getDir($request->getPathInfo());
     });
 
     // upload/update a file
-    $request->matchRest("PUT", "/public/:user/:path+", function($user, $path) use ($request, $response, $service) {
+    $request->matchRest("PUT", "/public/:user/:path+", function($user, $path) use ($request, $service) {
         // auth required
         $response = $service->putFile($request->getPathInfo(), $request->getContent(), $request->getHeader("Content-Type"));
     });
 
     // delete a file
-    $request->matchRest("DELETE", "/public/:user/:path+", function($user, $path) use ($request, $response, $service) {
+    $request->matchRest("DELETE", "/public/:user/:path+", function($user, $path) use ($request, $service) {
         // auth required
         $response = $service->deleteFile($request->getPathInfo());
     });
@@ -68,30 +70,30 @@ try {
     ####################
 
     // get a file
-    $request->matchRest("GET", "/:user/:path+", function($user, $path) use ($request, $response, $service) {
+    $request->matchRest("GET", "/:user/:path+", function($user, $path) use ($request, $service) {
         // auth required
         $response = $service->getFile($request->getPathInfo());
     });
 
     // get a directory listing
-    $request->matchRest("GET", "/:user/:path+/", function($user, $path) use ($request, $response, $service) {
+    $request->matchRest("GET", "/:user/:path+/", function($user, $path) use ($request, $service) {
         // auth required
         $response = $service->getDir($request->getPathInfo());
     });
 
     // upload/update a file
-    $request->matchRest("PUT", "/:user/:path+", function($user, $path) use ($request, $response, $service) {
+    $request->matchRest("PUT", "/:user/:path+", function($user, $path) use ($request, $service) {
         // auth required
         $response = $service->putFile($request->getPathInfo(), $request->getContent(), $request->getHeader("Content-Type"));
     });
 
     // delete a file
-    $request->matchRest("DELETE", "/:user/:path+", function($user, $path) use ($request, $response, $service) {
+    $request->matchRest("DELETE", "/:user/:path+", function($user, $path) use ($request, $service) {
         // auth required
         $response = $service->deleteFile($request->getPathInfo());
     });
 
-    $request->matchRestDefault(function($methodMatch, $patternMatch) use ($request) {
+    $request->matchRestDefault(function($methodMatch, $patternMatch) use ($request, $response) {
         if (in_array($request->getRequestMethod(), $methodMatch)) {
             if (!$patternMatch) {
                 throw new ProxyException("not_found", "resource not found");

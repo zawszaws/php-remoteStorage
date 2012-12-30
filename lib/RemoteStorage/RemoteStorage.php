@@ -38,7 +38,7 @@ class RemoteStorage
 
     public function getFile($path)
     {
-        $response = new HttpResponse(200);
+        $this->_l->logDebug("getting relative file path: " . $path);
 
         $file = realpath($this->_c->getValue('filesDirectory') . $path);
         if (FALSE === $file || !is_file($file)) {
@@ -49,18 +49,11 @@ class RemoteStorage
         } else {
             $mimeType = "application/json";
         }
-        $response->setHeader("Content-Type", $mimeType);
+        $response = new HttpResponse(200, $mimeType);
 
-        //$etag = $this->_getETag($file);
-        /* XXX we should better lock that file here */
-        //$response->setHeader("ETag", $etag);
-
-        //if ($this->_doIfMatchChecks($etag, $response)) {
-        //    return $response;
-        //}
-        //if ($this->_request->getRequestMethod() !== 'HEAD') {
+        $this->_l->logDebug("getting abs file path: " . $file);
         $response->setContent(file_get_contents($file));
-        //}
+
         return $response;
     }
 

@@ -2,7 +2,7 @@
 
 namespace RemoteStorage;
 
-class RemoteStorageException extends Exception
+class RemoteStorageException extends \Exception
 {
     private $_description;
 

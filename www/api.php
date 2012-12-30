@@ -40,23 +40,27 @@ try {
     ################
 
     // get a file
-    $request->matchRest("GET", "/public/:user/:path+", function($user, $path) use ($response, $service) {
+    $request->matchRest("GET", "/public/:user/:path+", function($user, $path) use ($request, $response, $service) {
         // no auth required
+        $response = $service->getFile($request->getPathInfo());
     });
 
     // get a directory listing
-    $request->matchRest("GET", "/public/:user/:path+/", function($user, $path) use ($response, $service) {
+    $request->matchRest("GET", "/public/:user/:path+/", function($user, $path) use ($request, $response, $service) {
         // auth required
+        $response = $service->getDir($request->getPathInfo());
     });
 
     // upload/update a file
     $request->matchRest("PUT", "/public/:user/:path+", function($user, $path) use ($request, $response, $service) {
         // auth required
+        $response = $service->putFile($request->getPathInfo(), $request->getContent(), $request->getHeader("Content-Type"));
     });
 
     // delete a file
-    $request->matchRest("DELETE", "/public/:user/:path+", function($user, $path) use ($response, $service) {
+    $request->matchRest("DELETE", "/public/:user/:path+", function($user, $path) use ($request, $response, $service) {
         // auth required
+        $response = $service->deleteFile($request->getPathInfo());
     });
 
     ####################
@@ -64,23 +68,27 @@ try {
     ####################
 
     // get a file
-    $request->matchRest("GET", "/:user/:path+", function($user, $path) use ($response, $service) {
+    $request->matchRest("GET", "/:user/:path+", function($user, $path) use ($request, $response, $service) {
         // auth required
+        $response = $service->getFile($request->getPathInfo());
     });
 
     // get a directory listing
-    $request->matchRest("GET", "/:user/:path+/", function($user, $path) use ($response, $service) {
+    $request->matchRest("GET", "/:user/:path+/", function($user, $path) use ($request, $response, $service) {
         // auth required
+        $response = $service->getDir($request->getPathInfo());
     });
 
     // upload/update a file
     $request->matchRest("PUT", "/:user/:path+", function($user, $path) use ($request, $response, $service) {
         // auth required
+        $response = $service->putFile($request->getPathInfo(), $request->getContent(), $request->getHeader("Content-Type"));
     });
 
     // delete a file
-    $request->matchRest("DELETE", "/:user/:path+", function($user, $path) use ($response, $service) {
+    $request->matchRest("DELETE", "/:user/:path+", function($user, $path) use ($request, $response, $service) {
         // auth required
+        $response = $service->deleteFile($request->getPathInfo());
     });
 
     $request->matchRestDefault(function($methodMatch, $patternMatch) use ($request) {

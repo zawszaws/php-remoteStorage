@@ -11,7 +11,7 @@ class RemoteStorage
     private $_c;
     private $_l;
 
-    public function __construct(Config $c, Logger $l) 
+    public function __construct(Config $c, Logger $l)
     {
         $this->_c = $c;
         $this->_l = $l;
@@ -32,6 +32,7 @@ class RemoteStorage
             chdir($cwd);
         }
         $response->setContent(json_encode($entries, JSON_FORCE_OBJECT));
+
         return $response;
     }
 
@@ -60,11 +61,10 @@ class RemoteStorage
         //if ($this->_request->getRequestMethod() !== 'HEAD') {
         $response->setContent(file_get_contents($file));
         //}
-
         return $response;
     }
 
-    public function putFile($path, $data)
+    public function putFile($path, $fileData, $contentType = NULL)
     {
         $response = new HttpResponse(200);
 
@@ -92,11 +92,11 @@ class RemoteStorage
         //    return $response;
         //}
 
-        $contentType = $this->_request->getHeader("Content-Type");
+        //$contentType = $this->_request->getHeader("Content-Type");
         if (NULL === $contentType) {
             $contentType = "application/json";
         }
-        file_put_contents($file, $this->_request->getContent());
+        file_put_contents($file, $fileData);
         // store mime_type
         if (function_exists("xattr_set")) {
             xattr_set($file, 'mime_type', $contentType);

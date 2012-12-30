@@ -1,6 +1,6 @@
 <?php
 
-namespace RemoteStorageException;
+namespace RemoteStorage;
 
 class RemoteStorageException extends Exception
 {
@@ -28,6 +28,8 @@ class RemoteStorageException extends Exception
                 return 403;
             case "method_not_allowed":
                 return 405;
+            case "internal_server_error":
+                return 500;
             default:
                 return 400;
         }

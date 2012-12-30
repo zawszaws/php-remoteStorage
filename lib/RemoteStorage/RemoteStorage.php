@@ -2,21 +2,24 @@
 
 namespace RemoteStorage;
 
+use \RestService\Utils\Config as Config;
+use \RestService\Utils\Logger as Logger;
+use \RestService\Http\HttpResponse as HttpResponse;
+
 class RemoteStorage
 {
     private $_c;
-    private $_request;
+    private $_l;
 
-    public function __construct(Config $c, HttpRequest $r)
+    public function __construct(Config $c, Logger $l) 
     {
         $this->_c = $c;
-        $this->_request = $r;
+        $this->_l = $l;
     }
 
     public function getDir($path)
     {
-        $response = new HttpResponse();
-        $response->setHeader("Content-Type", "application/json");
+        $response = new HttpResponse(200, "application/json");
 
         $entries = array();
         $dir = realpath($this->_c->getValue('filesDirectory') . $path);
@@ -28,16 +31,13 @@ class RemoteStorage
             }
             chdir($cwd);
         }
-        if ($this->_request->getRequestMethod() !== 'HEAD') {
-            $response->setContent(json_encode($entries, JSON_FORCE_OBJECT));
-        }
-
+        $response->setContent(json_encode($entries, JSON_FORCE_OBJECT));
         return $response;
     }
 
     public function getFile($path)
     {
-        $response = new HttpResponse();
+        $response = new HttpResponse(200);
 
         $file = realpath($this->_c->getValue('filesDirectory') . $path);
         if (FALSE === $file || !is_file($file)) {
@@ -50,27 +50,27 @@ class RemoteStorage
         }
         $response->setHeader("Content-Type", $mimeType);
 
-        $etag = $this->_getETag($file);
+        //$etag = $this->_getETag($file);
         /* XXX we should better lock that file here */
-        $response->setHeader("ETag", $etag);
+        //$response->setHeader("ETag", $etag);
 
-        if ($this->_doIfMatchChecks($etag, $response)) {
-            return $response;
-        }
-        if ($this->_request->getRequestMethod() !== 'HEAD') {
-            $response->setContent(file_get_contents($file));
-        }
+        //if ($this->_doIfMatchChecks($etag, $response)) {
+        //    return $response;
+        //}
+        //if ($this->_request->getRequestMethod() !== 'HEAD') {
+        $response->setContent(file_get_contents($file));
+        //}
 
         return $response;
     }
 
-    public function putFile($path)
+    public function putFile($path, $data)
     {
-        $response = new HttpResponse();
+        $response = new HttpResponse(200);
 
-        if ($this->_request->isDirectoryRequest()) {
-            throw new RemoteStorageException("invalid_request", "cannot store a directory");
-        }
+        //if ($this->_request->isDirectoryRequest()) {
+        //    throw new RemoteStorageException("invalid_request", "cannot store a directory");
+        //}
 
         $file = $this->_c->getValue('filesDirectory') . $path;
         $directory = dirname($file);
@@ -87,10 +87,10 @@ class RemoteStorage
         }
 
         /* XXX we should better lock that file here */
-        $etag = file_exists($file) ? $this->_getETag($file) : NULL;
-        if ($this->_doIfMatchChecks($etag, $response)) {
-            return $response;
-        }
+        //$etag = file_exists($file) ? $this->_getETag($file) : NULL;
+        //if ($this->_doIfMatchChecks($etag, $response)) {
+        //    return $response;
+        //}
 
         $contentType = $this->_request->getHeader("Content-Type");
         if (NULL === $contentType) {
@@ -107,11 +107,11 @@ class RemoteStorage
 
     public function deleteFile($path)
     {
-        $response = new HttpResponse();
+        $response = new HttpResponse(200);
 
-        if ($this->_request->isDirectoryRequest()) {
-            throw new RemoteStorageException("invalid_request", "directories cannot be deleted");
-        }
+        //if ($this->_request->isDirectoryRequest()) {
+        //    throw new RemoteStorageException("invalid_request", "directories cannot be deleted");
+        //}
 
         $file = realpath($this->_c->getValue('filesDirectory') . $path);
         if (FALSE === $file || !is_file($file)) {
@@ -119,58 +119,58 @@ class RemoteStorage
         }
 
         /* XXX we should better lock that file here */
-        $etag = $this->_getETag($file);
-        if ($this->_doIfMatchChecks($etag, $response)) {
-            return $response;
-        }
+        //$etag = $this->_getETag($file);
+        //if ($this->_doIfMatchChecks($etag, $response)) {
+        //    return $response;
+        // }
 
         if (@unlink($file) === FALSE) {
-            throw new Exception("unable to delete file");
+            throw new RemoteStorageException("internal_server_error", "unable to delete file");
         }
 
         return $response;
     }
 
-    private function _getETag($file)
-    {
-        $fs = stat($file);
+#    private function _getETag($file)
+#    {
+#        $fs = stat($file);
 
-        return sprintf('"%x-%x-%s"', $fs['ino'], $fs['size'], base_convert(str_pad($fs['mtime'], 16, "0"), 10, 16));
-    }
+#        return sprintf('"%x-%x-%s"', $fs['ino'], $fs['size'], base_convert(str_pad($fs['mtime'], 16, "0"), 10, 16));
+#    }
 
     /* supply NULL for $etag if file is not present */
-    private function _doIfMatchChecks($etag, &$response)
-    {
-        /* XXX better use an exception? */
-        if (Null !== $this->_request->getHeader("If-Match")) {
-            /* XXX the client could specify multiple ETags separated by comma */
-            $match = $this->_request->getHeader("If-Match");
-            if (($match === '*' && $etag !== NULL) ||
-                        ($match !== '*' && $match === $etag)) {
-                return FALSE;
-            }
-            $response->setStatusCode("412");
+#    private function _doIfMatchChecks($etag, &$response)
+#    {
+#        /* XXX better use an exception? */
+#        if (Null !== $this->_request->getHeader("If-Match")) {
+#            /* XXX the client could specify multiple ETags separated by comma */
+#            $match = $this->_request->getHeader("If-Match");
+#            if (($match === '*' && $etag !== NULL) ||
+#                        ($match !== '*' && $match === $etag)) {
+#                return FALSE;
+#            }
+#            $response->setStatusCode("412");
 
-            return TRUE;
-        } elseif (NULL !== $this->_request->getHeader("If-None-Match")) {
-            /* XXX the client could specify multiple ETags separated by comma */
-            $match = $this->_request->getHeader("If-None-Match");
-            if (($match === '*' && $etag === NULL) ||
-                    ($match !== '*' && $match !== $etag)) {
-                return FALSE;
-            }
-            $method = $this->_request->getRequestMethod();
-            if ($method === 'HEAD' || $method === 'GET') {
-                $response->setStatusCode('304');
-            } else {
-                $response->setStatusCode('412');
-            }
+#            return TRUE;
+#        } elseif (NULL !== $this->_request->getHeader("If-None-Match")) {
+#            /* XXX the client could specify multiple ETags separated by comma */
+#            $match = $this->_request->getHeader("If-None-Match");
+#            if (($match === '*' && $etag === NULL) ||
+#                    ($match !== '*' && $match !== $etag)) {
+#                return FALSE;
+#            }
+#            $method = $this->_request->getRequestMethod();
+#            if ($method === 'HEAD' || $method === 'GET') {
+#                $response->setStatusCode('304');
+#            } else {
+#                $response->setStatusCode('412');
+#            }
 
-            return TRUE;
-        } else {
-            return FALSE;
-        }
-    }
+#            return TRUE;
+#        } else {
+#            return FALSE;
+#        }
+#    }
 
     private function _createDirectory($dir)
     {

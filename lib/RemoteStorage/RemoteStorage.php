@@ -52,7 +52,11 @@ class RemoteStorage
         $response = new HttpResponse(200, $mimeType);
 
         $this->_l->logDebug("getting abs file path: " . $file);
-        $response->setContent(file_get_contents($file));
+
+        $content = file_get_contents($file);
+        $this->_l->logDebug("file contents: " . $content);
+
+        $response->setContent($content);
 
         return $response;
     }
@@ -60,11 +64,6 @@ class RemoteStorage
     public function putFile($path, $fileData, $contentType = NULL)
     {
         $response = new HttpResponse(200);
-
-        //if ($this->_request->isDirectoryRequest()) {
-        //    throw new RemoteStorageException("invalid_request", "cannot store a directory");
-        //}
-
         $file = $this->_c->getValue('filesDirectory') . $path;
         $directory = dirname($file);
         $dir = realpath($directory);
@@ -79,13 +78,6 @@ class RemoteStorage
             throw new RemoteStorageException("invalid_request", "parent of file already exists and is not a directory");
         }
 
-        /* XXX we should better lock that file here */
-        //$etag = file_exists($file) ? $this->_getETag($file) : NULL;
-        //if ($this->_doIfMatchChecks($etag, $response)) {
-        //    return $response;
-        //}
-
-        //$contentType = $this->_request->getHeader("Content-Type");
         if (NULL === $contentType) {
             $contentType = "application/json";
         }
@@ -101,21 +93,10 @@ class RemoteStorage
     public function deleteFile($path)
     {
         $response = new HttpResponse(200);
-
-        //if ($this->_request->isDirectoryRequest()) {
-        //    throw new RemoteStorageException("invalid_request", "directories cannot be deleted");
-        //}
-
         $file = realpath($this->_c->getValue('filesDirectory') . $path);
         if (FALSE === $file || !is_file($file)) {
             throw new RemoteStorageException("not_found", "file not found");
         }
-
-        /* XXX we should better lock that file here */
-        //$etag = $this->_getETag($file);
-        //if ($this->_doIfMatchChecks($etag, $response)) {
-        //    return $response;
-        // }
 
         if (@unlink($file) === FALSE) {
             throw new RemoteStorageException("internal_server_error", "unable to delete file");
@@ -123,47 +104,6 @@ class RemoteStorage
 
         return $response;
     }
-
-#    private function _getETag($file)
-#    {
-#        $fs = stat($file);
-
-#        return sprintf('"%x-%x-%s"', $fs['ino'], $fs['size'], base_convert(str_pad($fs['mtime'], 16, "0"), 10, 16));
-#    }
-
-    /* supply NULL for $etag if file is not present */
-#    private function _doIfMatchChecks($etag, &$response)
-#    {
-#        /* XXX better use an exception? */
-#        if (Null !== $this->_request->getHeader("If-Match")) {
-#            /* XXX the client could specify multiple ETags separated by comma */
-#            $match = $this->_request->getHeader("If-Match");
-#            if (($match === '*' && $etag !== NULL) ||
-#                        ($match !== '*' && $match === $etag)) {
-#                return FALSE;
-#            }
-#            $response->setStatusCode("412");
-
-#            return TRUE;
-#        } elseif (NULL !== $this->_request->getHeader("If-None-Match")) {
-#            /* XXX the client could specify multiple ETags separated by comma */
-#            $match = $this->_request->getHeader("If-None-Match");
-#            if (($match === '*' && $etag === NULL) ||
-#                    ($match !== '*' && $match !== $etag)) {
-#                return FALSE;
-#            }
-#            $method = $this->_request->getRequestMethod();
-#            if ($method === 'HEAD' || $method === 'GET') {
-#                $response->setStatusCode('304');
-#            } else {
-#                $response->setStatusCode('412');
-#            }
-
-#            return TRUE;
-#        } else {
-#            return FALSE;
-#        }
-#    }
 
     private function _createDirectory($dir)
     {

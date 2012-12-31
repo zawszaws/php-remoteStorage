@@ -40,7 +40,6 @@ class RemoteStorageTest extends PHPUnit_Framework_TestCase
         $this->_c->setValue("filesDirectory", $this->_tmpDir);
         // point to a mock file instead of a "real" URL
         $tokenInfoFile = "file://" . __DIR__ . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "tokeninfo.json";
-        error_log($tokenInfoFile);
         $this->_c->setSectionValue("OAuth", "tokenInfoEndpoint", $tokenInfoFile);
     }
 
@@ -60,46 +59,43 @@ class RemoteStorageTest extends PHPUnit_Framework_TestCase
         $this->assertEquals('["a","b","c","d"]', $response->getContent());
     }
 
-#    public function testDirList()
-#    {
-#        $h = new RemoteStorageRequest("https://www.example.org/api.php");
-#        $h->setPathInfo("/dir/list/");
-#        $r = new RemoteStorage($this->_c, $h);
-#        $response = $r->getDir($h->getPathInfo());
-#        $this->assertEquals("{}", $response->getContent());
-#    }
+    public function testPrivateUploadFile()
+    {
+        $h = new HttpRequest("http://localhost/php-remoteStorage/api.php", "PUT");
+        $h->setPathInfo("/admin/public/money/my.txt");
+        $h->setHeader("Content-Type", "text/plain");
+        $h->setContent("Hello World!");
+        $h->setHeader("Authorization", "Bearer xyz");
+        $r = new RemoteStorage($this->_c, NULL);
+        $response = $r->handleRequest($h);
+        $this->assertEquals('application/json', $response->getHeader('Content-Type'));
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals('', $response->getContent());
+    }
 
-#    public function testFlow()
-#    {
-#        // add file
-#        $h = new RemoteStorageRequest("https://www.example.org/api.php", "PUT");
-#        $h->setPathInfo("/dir/list/foo");
-#        $h->setContent("Hello World");
-#        $r = new RemoteStorage($this->_c, $h);
-#        $response = $r->putFile($h->getPathInfo());
-#        $this->assertEquals(200, $response->getStatusCode());
+    public function testPrivateDeleteFile()
+    {
+        $h = new HttpRequest("http://localhost/php-remoteStorage/api.php", "DELETE");
+        $h->setPathInfo("/admin/public/money/1.json");
+        $h->setHeader("Authorization", "Bearer xyz");
+        $r = new RemoteStorage($this->_c, NULL);
+        $response = $r->handleRequest($h);
+        $this->assertEquals('application/json', $response->getHeader('Content-Type'));
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals('', $response->getContent());
+    }
 
-#        // get dir listing
-#        $h = new RemoteStorageRequest("https://www.example.org/api.php");
-#        $h->setPathInfo("/dir/list/");
-#        $r = new RemoteStorage($this->_c, $h);
-#        $response = $r->getDir($h->getPathInfo());
-#        $this->assertRegExp('{"foo":[0-9]+}', $response->getContent()); // FIXME: regexp is not correct, should be greedy or something!
-
-#        // get file
-#        $h = new RemoteStorageRequest("https://www.example.org/api.php", "GET");
-#        $h->setPathInfo("/dir/list/foo");
-#        $r = new RemoteStorage($this->_c, $h);
-#        $response = $r->getFile($h->getPathInfo());
-#        $this->assertEquals("Hello World", $response->getContent());
-
-#        // delete file
-#        $h = new RemoteStorageRequest("https://www.example.org/api.php", "DELETE");
-#        $h->setPathInfo("/dir/list/foo");
-#        $r = new RemoteStorage($this->_c, $h);
-#        $response = $r->deleteFile($h->getPathInfo());
-#        $this->assertEquals(200, $response->getStatusCode());
-#    }
+    public function testListPrivateFiles()
+    {
+        $h = new HttpRequest("http://localhost/php-remoteStorage/api.php", "GET");
+        $h->setPathInfo("/admin/public/money/");
+        $h->setHeader("Authorization", "Bearer xyz");
+        $r = new RemoteStorage($this->_c, NULL);
+        $response = $r->handleRequest($h);
+        $this->assertEquals('application/json', $response->getHeader('Content-Type'));
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals('', $response->getContent());
+    }
 
     private function _rrmdir($dir)
     {

@@ -20,7 +20,7 @@ class RemoteStorage
         $this->_config = $c;
         $this->_logger = $l;
 
-        $this->_rs = new RemoteResourceServer($this->_config->getSectionValues("OAuth"));
+        $this->_rs = new RemoteResourceServer($this->_config->getSectionValues("OAuth") + array("throwException" => TRUE));
         $this->_fs = new FileStorage($this->_config, $this->_logger);
     }
 
@@ -56,7 +56,7 @@ class RemoteStorage
             // get a directory listing
             $request->matchRest("GET", "/:user/public/:module/:path+/", function($user, $module, $path) use ($rs, $request, &$response, $service) {
                 // auth required
-                $rs->verifyRequest();
+                $rs->verifyAuthorizationHeader($request->getHeader("Authorization"));
                 if ($user !== $rs->getResourceOwnerId()) {
                     throw new RemoteStorageException("forbidden", "authorized user does not match user in path");
                 }
@@ -72,7 +72,7 @@ class RemoteStorage
             // upload/update a file
             $request->matchRest("PUT", "/:user/public/:module/:path+", function($user, $module, $path) use ($rs, $request, &$response, $service) {
                 // auth required
-                $rs->verifyRequest();
+                $rs->verifyAuthorizationHeader($request->getHeader("Authorization"));
                 if ($user !== $rs->getResourceOwnerId()) {
                     throw new RemoteStorageException("forbidden", "authorized user does not match user in path");
                 }
@@ -88,7 +88,7 @@ class RemoteStorage
             // delete a file
             $request->matchRest("DELETE", "/:user/public/:module/:path+", function($user, $module, $path) use ($rs, $request, &$response, $service) {
                 // auth required
-                $rs->verifyRequest();
+                $rs->verifyAuthorizationHeader($request->getHeader("Authorization"));
                 if ($user !== $rs->getResourceOwnerId()) {
                     throw new RemoteStorageException("forbidden", "authorized user does not match user in path");
                 }
@@ -111,7 +111,7 @@ class RemoteStorage
             // get a file
             $request->matchRest("GET", "/:user/:module/:path+", function($user, $module, $path) use ($rs, $request, &$response, $service) {
                 // auth required
-                $rs->verifyRequest();
+                $rs->verifyAuthorizationHeader($request->getHeader("Authorization"));
                 if ($user !== $rs->getResourceOwnerId()) {
                     throw new RemoteStorageException("forbidden", "authorized user does not match user in path");
                 }
@@ -128,7 +128,7 @@ class RemoteStorage
             // get a directory listing
             $request->matchRest("GET", "/:user/:module/:path+/", function($user, $module, $path) use ($rs, $request, &$response, $service) {
                 // auth required
-                $rs->verifyRequest();
+                $rs->verifyAuthorizationHeader($request->getHeader("Authorization"));
                 if ($user !== $rs->getResourceOwnerId()) {
                     throw new RemoteStorageException("forbidden", "authorized user does not match user in path");
                 }
@@ -144,7 +144,7 @@ class RemoteStorage
             // upload/update a file
             $request->matchRest("PUT", "/:user/:module/:path+", function($user, $module, $path) use ($rs, $request, &$response, $service) {
                 // auth required
-                $rs->verifyRequest();
+                $rs->verifyAuthorizationHeader($request->getHeader("Authorization"));
                 if ($user !== $rs->getResourceOwnerId()) {
                     throw new RemoteStorageException("forbidden", "authorized user does not match user in path");
                 }
@@ -160,7 +160,7 @@ class RemoteStorage
             // delete a file
             $request->matchRest("DELETE", "/:user/:module/:path+", function($user, $module, $path) use ($rs, $request, &$response, $service) {
                 // auth required
-                $rs->verifyRequest();
+                $rs->verifyAuthorizationHeader($request->getHeader("Authorization"));
                 if ($user !== $rs->getResourceOwnerId()) {
                     throw new RemoteStorageException("forbidden", "authorized user does not match user in path");
                 }
@@ -175,7 +175,7 @@ class RemoteStorage
             $request->matchRestDefault(function($methodMatch, $patternMatch) use ($request, &$response) {
                 if (in_array($request->getRequestMethod(), $methodMatch)) {
                     if (!$patternMatch) {
-                        throw new ProxyException("not_found", "resource not found");
+                        throw new RemoteStorageException("not_found", "resource not found");
                     }
                 } else {
                     $response->setResponseCode(405);

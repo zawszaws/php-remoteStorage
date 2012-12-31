@@ -47,33 +47,41 @@ class RemoteStorage
             // get a file
             $request->matchRest("GET", "/:user/public/:path+", function($user, $path) use ($request, &$response, $service) {
                 // no auth required
+                // FIXME: deal with Content-Type
                 $content = $service->getFile($request->getPathInfo());
                 if (FALSE === $content) {
                     throw new RemoteStorageException("not_found", "file not found");
-                } else {
-                    $response->setContent($content);
                 }
+                $response->setContent($content);
             });
 
             // get a directory listing
             $request->matchRest("GET", "/:user/public/:path+/", function($user, $path) use ($request, &$response, $service) {
                 // auth required
-                $response->setContent($service->getDir(json_encode($request->getPathInfo()), JSON_FORCE_OBJECT));
+                $content = $service->getDir($request->getPathInfo());
+                if (FALSE === $content) {
+                    throw new RemoteStorageException("not_found", "directory not found");
+                }
+                $response->setContent(json_encode($content, JSON_FORCE_OBJECT));
             });
 
             // upload/update a file
             $request->matchRest("PUT", "/:user/public/:path+", function($user, $path) use ($request, &$response, $service) {
                 // auth required
-                // FIXME: deal with response
-                $service->putFile($request->getPathInfo(), $request->getContent(), $request->getHeader("Content-Type"));
-
+                // FIXME: deal with Content-Type
+                $result = $service->putFile($request->getPathInfo(), $request->getContent());
+                if (FALSE === $result) {
+                    throw new RemoteStorageException("invalid_request", "unable to store file");
+                }
             });
 
             // delete a file
             $request->matchRest("DELETE", "/:user/public/:path+", function($user, $path) use ($request, &$response, $service) {
                 // auth required
-                // FIXME: deal with response
-                $service->deleteFile($request->getPathInfo());
+                $result = $service->deleteFile($request->getPathInfo());
+                if (FALSE === $result) {
+                    throw new RemoteStorageException("not_found", "file not found");
+                }
             });
 
             ####################
@@ -83,27 +91,41 @@ class RemoteStorage
             // get a file
             $request->matchRest("GET", "/:user/:path+", function($user, $path) use ($request, &$response, $service) {
                 // auth required
-                $response->setContent($service->getFile($request->getPathInfo()));
+                // FIXME: deal with Content-Type
+                $content = $service->getFile($request->getPathInfo());
+                if (FALSE === $content) {
+                    throw new RemoteStorageException("not_found", "file not found");
+                }
+                $response->setContent($content);
             });
 
             // get a directory listing
             $request->matchRest("GET", "/:user/:path+/", function($user, $path) use ($request, &$response, $service) {
                 // auth required
-                $response->setContent(json_encode($service->getDir($request->getPathInfo()), JSON_FORCE_OBJECT));
+                $content = $service->getDir($request->getPathInfo());
+                if (FALSE === $content) {
+                    throw new RemoteStorageException("not_found", "directory not found");
+                }
+                $response->setContent(json_encode($content, JSON_FORCE_OBJECT));
             });
 
             // upload/update a file
             $request->matchRest("PUT", "/:user/:path+", function($user, $path) use ($request, &$response, $service) {
                 // auth required
-                // FIXME: deal with response
-                $service->putFile($request->getPathInfo(), $request->getContent(), $request->getHeader("Content-Type"));
+                // FIXME: deal with Content-Type
+                $result = $service->putFile($request->getPathInfo(), $request->getContent());
+                if (FALSE === $result) {
+                    throw new RemoteStorageException("invalid_request", "unable to store file");
+                }
             });
 
             // delete a file
             $request->matchRest("DELETE", "/:user/:path+", function($user, $path) use ($request, &$response, $service) {
                 // auth required
-                // FIXME: deal with response
-                $service->deleteFile($request->getPathInfo());
+                $result = $service->deleteFile($request->getPathInfo());
+                if (FALSE === $result) {
+                    throw new RemoteStorageException("not_found", "file not found");
+                }
             });
 
             $request->matchRestDefault(function($methodMatch, $patternMatch) use ($request, &$response) {

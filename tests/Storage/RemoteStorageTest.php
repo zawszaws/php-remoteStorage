@@ -119,6 +119,18 @@ class RemoteStorageTest extends PHPUnit_Framework_TestCase
         $this->assertEquals('{"error":"insufficient_scope","error_description":"no permission for this call with granted scope"}', $response->getContent());
     }
 
+    public function testListPrivateFilesFromSomeoneElse()
+    {
+        $h = new HttpRequest("http://localhost/php-remoteStorage/api.php", "GET");
+        $h->setPathInfo("/teacher/public/calendar/");
+        $h->setHeader("Authorization", "Bearer foo");
+        $r = new RemoteStorage($this->_c, NULL);
+        $response = $r->handleRequest($h);
+        $this->assertEquals('application/json', $response->getHeader('Content-Type'));
+        $this->assertEquals(403, $response->getStatusCode());
+        $this->assertEquals('{"error":"forbidden","error_description":"authorized user does not match user in path"}', $response->getContent());
+    }
+
     private function _rrmdir($dir)
     {
         foreach (glob($dir . '/*') as $file) {

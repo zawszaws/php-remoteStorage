@@ -8,6 +8,7 @@ use \RestService\Http\HttpRequest as HttpRequest;
 use \RestService\Http\HttpResponse as HttpResponse;
 
 use \OAuth\RemoteResourceServer as RemoteResourceServer;
+use \OAuth\RemoteResourceServerException as RemoteResourceServerException;
 
 class RemoteStorage
 {

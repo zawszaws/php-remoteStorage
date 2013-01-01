@@ -59,6 +59,18 @@ class RemoteStorageTest extends PHPUnit_Framework_TestCase
         $this->assertEquals('["a","b","c","d"]', $response->getContent());
     }
 
+    public function testListPublicFiles()
+    {
+        $h = new HttpRequest("http://localhost/php-remoteStorage/api.php", "GET");
+        $h->setPathInfo("/admin/public/money/");
+        $r = new RemoteStorage($this->_c, NULL);
+        $response = $r->handleRequest($h);
+        $this->assertEquals('application/json', $response->getHeader('Content-Type'));
+        $this->assertEquals(401, $response->getStatusCode());
+        $this->assertEquals('{"error":"no_token","error_description":"no authorization header in the request"}', $response->getContent());
+        $this->assertEquals('Bearer realm="remoteStorage Server"', $response->getHeader("WWW-Authenticate"));
+    }
+
     public function testPrivateUploadFile()
     {
         $h = new HttpRequest("http://localhost/php-remoteStorage/api.php", "PUT");
@@ -70,7 +82,6 @@ class RemoteStorageTest extends PHPUnit_Framework_TestCase
         $response = $r->handleRequest($h);
         $this->assertEquals('application/json', $response->getHeader('Content-Type'));
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals('', $response->getContent());
     }
 
     public function testPrivateDeleteFile()
@@ -82,7 +93,6 @@ class RemoteStorageTest extends PHPUnit_Framework_TestCase
         $response = $r->handleRequest($h);
         $this->assertEquals('application/json', $response->getHeader('Content-Type'));
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals('', $response->getContent());
     }
 
     public function testListPrivateFiles()
@@ -95,6 +105,18 @@ class RemoteStorageTest extends PHPUnit_Framework_TestCase
         $this->assertEquals('application/json', $response->getHeader('Content-Type'));
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertRegExp('{"0.json":[0-9]+,"1.json":[0-9]+,"2.json":[0-9]+,"3.json":[0-9]+,"4.json":[0-9]+}', $response->getContent());
+    }
+
+    public function testListPrivateFilesInWrongModule()
+    {
+        $h = new HttpRequest("http://localhost/php-remoteStorage/api.php", "GET");
+        $h->setPathInfo("/admin/public/calendar/");
+        $h->setHeader("Authorization", "Bearer foo");
+        $r = new RemoteStorage($this->_c, NULL);
+        $response = $r->handleRequest($h);
+        $this->assertEquals('application/json', $response->getHeader('Content-Type'));
+        $this->assertEquals(403, $response->getStatusCode());
+        $this->assertEquals('{"error":"insufficient_scope","error_description":"no permission for this call with granted scope"}', $response->getContent());
     }
 
     private function _rrmdir($dir)

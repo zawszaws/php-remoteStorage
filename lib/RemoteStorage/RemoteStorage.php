@@ -54,7 +54,7 @@ class RemoteStorage
             });
 
             // get a directory listing
-            $request->matchRest("GET", "/:user/public/:module/:path+/", function($user, $module, $path) use ($rs, $request, &$response, $service) {
+            $request->matchRest("GET", "/:user/public/:module(/:path+)/", function($user, $module, $path = NULL) use ($rs, $request, &$response, $service) {
                 // auth required
                 $rs->verifyAuthorizationHeader($request->getHeader("Authorization"));
                 if ($user !== $rs->getResourceOwnerId()) {
@@ -126,7 +126,7 @@ class RemoteStorage
             });
 
             // get a directory listing
-            $request->matchRest("GET", "/:user/:module/:path+/", function($user, $module, $path) use ($rs, $request, &$response, $service) {
+            $request->matchRest("GET", "/:user/:module(/:path+)/", function($user, $module, $path = NULL) use ($rs, $request, &$response, $service) {
                 // auth required
                 $rs->verifyAuthorizationHeader($request->getHeader("Authorization"));
                 if ($user !== $rs->getResourceOwnerId()) {

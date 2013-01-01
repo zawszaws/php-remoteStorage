@@ -39,7 +39,7 @@ class RemoteStorageTest extends PHPUnit_Framework_TestCase
         // override DB config in memory only
         $this->_c->setValue("filesDirectory", $this->_tmpDir);
         // point to a mock file instead of a "real" URL
-        $tokenInfoFile = "file://" . __DIR__ . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "tokeninfo.json";
+        $tokenInfoFile = "file://" . __DIR__ . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR;
         $this->_c->setSectionValue("OAuth", "tokenInfoEndpoint", $tokenInfoFile);
     }
 
@@ -65,7 +65,7 @@ class RemoteStorageTest extends PHPUnit_Framework_TestCase
         $h->setPathInfo("/admin/public/money/my.txt");
         $h->setHeader("Content-Type", "text/plain");
         $h->setContent("Hello World!");
-        $h->setHeader("Authorization", "Bearer xyz");
+        $h->setHeader("Authorization", "Bearer foo");
         $r = new RemoteStorage($this->_c, NULL);
         $response = $r->handleRequest($h);
         $this->assertEquals('application/json', $response->getHeader('Content-Type'));
@@ -77,7 +77,7 @@ class RemoteStorageTest extends PHPUnit_Framework_TestCase
     {
         $h = new HttpRequest("http://localhost/php-remoteStorage/api.php", "DELETE");
         $h->setPathInfo("/admin/public/money/1.json");
-        $h->setHeader("Authorization", "Bearer xyz");
+        $h->setHeader("Authorization", "Bearer foo");
         $r = new RemoteStorage($this->_c, NULL);
         $response = $r->handleRequest($h);
         $this->assertEquals('application/json', $response->getHeader('Content-Type'));
@@ -89,12 +89,12 @@ class RemoteStorageTest extends PHPUnit_Framework_TestCase
     {
         $h = new HttpRequest("http://localhost/php-remoteStorage/api.php", "GET");
         $h->setPathInfo("/admin/public/money/");
-        $h->setHeader("Authorization", "Bearer xyz");
+        $h->setHeader("Authorization", "Bearer foo");
         $r = new RemoteStorage($this->_c, NULL);
         $response = $r->handleRequest($h);
         $this->assertEquals('application/json', $response->getHeader('Content-Type'));
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals('', $response->getContent());
+        $this->assertRegExp('{"0.json":[0-9]+,"1.json":[0-9]+,"2.json":[0-9]+,"3.json":[0-9]+,"4.json":[0-9]+}', $response->getContent());
     }
 
     private function _rrmdir($dir)

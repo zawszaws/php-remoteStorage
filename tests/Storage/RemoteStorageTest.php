@@ -30,6 +30,11 @@ class RemoteStorageTest extends PHPUnit_Framework_TestCase
                     file_put_contents($privateDir . DIRECTORY_SEPARATOR . $i.".json", json_encode(array("a", "b", "c", "d")));
                     file_put_contents($publicDir . DIRECTORY_SEPARATOR . $i.".json", json_encode(array("a", "b", "c", "d")));
                 }
+                $privateSubDir = $privateDir . DIRECTORY_SEPARATOR . "sub";
+                mkdir($privateSubDir, 0775, TRUE);
+                for ($i = 0; $i < 5; $i++) {
+                    file_put_contents($privateSubDir . DIRECTORY_SEPARATOR . $i.".json", json_encode(array("a", "b", "c", "d")));
+                }
             }
         }
 
@@ -129,6 +134,30 @@ class RemoteStorageTest extends PHPUnit_Framework_TestCase
         $this->assertEquals('application/json', $response->getHeader('Content-Type'));
         $this->assertEquals(403, $response->getStatusCode());
         $this->assertEquals('{"error":"forbidden","error_description":"authorized user does not match user in path"}', $response->getContent());
+    }
+
+    public function testPrivateSubDirList()
+    {
+        $h = new HttpRequest("http://localhost/php-remoteStorage/api.php", "GET");
+        $h->setPathInfo("/admin/money/sub/");
+        $h->setHeader("Authorization", "Bearer foo");
+        $r = new RemoteStorage($this->_c, NULL);
+        $response = $r->handleRequest($h);
+        $this->assertEquals('application/json', $response->getHeader('Content-Type'));
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(json_encode(array("0.json"=>time(), "1.json"=>time(), "2.json"=>time(), "3.json"=>time(), "4.json"=>time())), $response->getContent());
+    }
+
+    public function testDownloadPrivateFileSubDir()
+    {
+        $h = new HttpRequest("http://localhost/php-remoteStorage/api.php", "GET");
+        $h->setPathInfo("/admin/money/sub/1.json");
+        $h->setHeader("Authorization", "Bearer foo");
+        $r = new RemoteStorage($this->_c, NULL);
+        $response = $r->handleRequest($h);
+        $this->assertEquals('application/json', $response->getHeader('Content-Type'));
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals('["a","b","c","d"]', $response->getContent());
     }
 
     private function _rrmdir($dir)

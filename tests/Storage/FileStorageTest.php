@@ -32,10 +32,13 @@ class FileStorageTest extends PHPUnit_Framework_TestCase
         $f = new FileStorage($this->_c);
         $this->assertTrue($f->putFile("/foo/bar/demo.txt", "Hello World"));
         $this->assertTrue($f->putFile("/foo/bar/test.txt", "Hello Test"));
+        $this->assertTrue($f->putFile("/foo/bar/foobar/foobaz/test.txt", "Hello Foo"));
         $this->assertEquals("Hello World", $f->getFile("/foo/bar/demo.txt"));
         $this->assertEquals("Hello Test", $f->getFile("/foo/bar/test.txt"));
+        $this->assertEquals("Hello Foo", $f->getFile("/foo/bar/foobar/foobaz/test.txt"));
         // FIXME: the time is only correct if the test runs fast enough...
-        $this->assertEquals(array("demo.txt" => time(), "test.txt" => time()), $f->getDir("/foo/bar/"));
+        $this->assertEquals(array("demo.txt" => time(), "test.txt" => time(), "foobar/" => time()), $f->getDir("/foo/bar/"));
+        $this->assertEquals(array("test.txt" => time()), $f->getDir("/foo/bar/foobar/foobaz/"));
         $this->assertTrue($f->deleteFile("/foo/bar/demo.txt"));
     }
 

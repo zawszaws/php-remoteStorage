@@ -34,7 +34,10 @@ class FileStorage
         $dir = realpath($this->_config->getValue('filesDirectory') . $path);
         if (FALSE !== $dir && is_dir($dir)) {
             $cwd = getcwd();
-            chdir($dir);
+            if (FALSE === @chdir($dir)) {
+                // could not enter directory
+                return FALSE;
+            }
             foreach (glob("*", GLOB_MARK) as $e) {
                 $entries[$e] = filemtime($e);
             }

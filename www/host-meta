@@ -1,0 +1,13 @@
+{
+    "links": [
+        {
+            "href": "http://localhost/oauth/php-remoteStorage/api.php/ffe359e390f5a0bca7c73e97352ae02cc5448ff3",
+            "properties": {
+                "auth-endpoint": "http://localhost/oauth/php-oauth/authorize.php",
+                "auth-method": "https://tools.ietf.org/html/draft-ietf-oauth-v2-26#section-4.2"
+            }, 
+            "rel": "remoteStorage", 
+            "type": "https://www.w3.org/community/rww/wiki/read-write-web-00#simple"
+        }
+    ]
+}

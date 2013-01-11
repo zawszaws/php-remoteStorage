@@ -56,7 +56,7 @@ class FileStorage
      *                              the file does not exist
      * @throws FileStorageException if the file could not be read
      */
-    public function getFile($path)
+    public function getFile($path, &$contentType)
     {
         if (strrpos($path, "/") === strlen($path) - 1) {
             return FALSE;
@@ -69,6 +69,12 @@ class FileStorage
         if (FALSE === $fileContent) {
             throw new FileStorageException("file could not be read");
         }
+
+        // check for xattr support first, if available use that, if not 
+        // fallback to finfo
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $contentType = finfo_file($finfo, $file);
+        finfo_close($finfo);
 
         return $fileContent;
     }

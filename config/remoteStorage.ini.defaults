@@ -4,6 +4,14 @@ serviceName = "remoteStorage Server"
 ; the path to the files
 filesDirectory = "/PATH/TO/APP/data/files"
 
+; use a JSON file in the filesDirectory to keep track of mime-types of uploaded
+; files, FOR TESTING PURPOSES ONLY
+mimeHandler = "json"
+
+; the xattr handler SHOULD be used in production, but requires the PHP pecl 
+; "xattr" extension
+; mimeHandler = "xattr"
+
 ; OAuth AS
 [OAuth]
 tokenInfoEndpoint = "http://localhost/php-oauth/tokeninfo.php"

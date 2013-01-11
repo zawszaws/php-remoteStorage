@@ -56,7 +56,7 @@ class FileStorage
      *                              the file does not exist
      * @throws FileStorageException if the file could not be read
      */
-    public function getFile($path, &$contentType)
+    public function getFile($path, &$mimeType)
     {
         if (strrpos($path, "/") === strlen($path) - 1) {
             return FALSE;
@@ -65,16 +65,15 @@ class FileStorage
         if (FALSE === $file || !is_file($file)) {
             return FALSE;
         }
+
+        // FIXME: implement X-SendFile
         $fileContent = file_get_contents($file);
         if (FALSE === $fileContent) {
             throw new FileStorageException("file could not be read");
         }
 
-        // check for xattr support first, if available use that, if not 
-        // fallback to finfo
-        $finfo = finfo_open(FILEINFO_MIME_TYPE);
-        $contentType = finfo_file($finfo, $file);
-        finfo_close($finfo);
+        $m = new MimeHandler($this->_config);
+        $mimeType = $m->getMimeType($file);
 
         return $fileContent;
     }
@@ -89,7 +88,7 @@ class FileStorage
      * @throws FileStorageException if a directory needs to be created for
      *                              holding this file and that fails
      */
-    public function putFile($path, $fileData)
+    public function putFile($path, $fileData, $mimeType)
     {
         if (strrpos($path, "/") === strlen($path) - 1) {
             return FALSE;
@@ -108,6 +107,9 @@ class FileStorage
             // parent of file already exists and is not a directory
             return FALSE;
         }
+
+        $m = new MimeHandler($this->_config);
+        $m->setMimeType($file, $mimeType);
 
         return FALSE !== file_put_contents($file, $fileData);
     }

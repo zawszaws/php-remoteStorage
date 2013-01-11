@@ -26,6 +26,7 @@ try {
     // any other error thrown by any of the modules, assume internal server error
     $response = new HttpResponse();
     $response->setStatusCode(500);
+    $response->setHeader("Content-Type", "application/json");
     $response->setContent(json_encode(array("error" => "internal_server_error", "error_description" => $e->getMessage())));
     if (NULL !== $logger) {
         $logger->logFatal($e->getMessage() . PHP_EOL . $request . PHP_EOL . $response);

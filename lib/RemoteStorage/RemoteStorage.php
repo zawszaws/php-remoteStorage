@@ -46,12 +46,12 @@ class RemoteStorage
             // get a file
             $request->matchRest("GET", "/:user/public/:module/:path+", function($user, $module, $path) use ($rs, $request, &$response, $service) {
                 // no auth required
-                $content = $service->getFile($request->getPathInfo(), $contentType);
-                if (FALSE === $content) {
+                $filePath = $service->getFile($request->getPathInfo(), $contentType);
+                if (FALSE === $filePath) {
                     throw new RemoteStorageException("not_found", "file not found");
                 }
                 $response->setContentType($contentType);
-                $response->setContent($content);
+                $response->setContentFile($filePath);
             });
 
             // get a directory listing
@@ -118,12 +118,12 @@ class RemoteStorage
                 }
                 $rs->requireAnyScope(array("$module:r", "$module:rw", "root:r", "root:rw"));
 
-                $content = $service->getFile($request->getPathInfo(), $contentType);
-                if (FALSE === $content) {
+                $filePath = $service->getFile($request->getPathInfo(), $contentType);
+                if (FALSE === $filePath) {
                     throw new RemoteStorageException("not_found", "file not found");
                 }
                 $response->setContentType($contentType);
-                $response->setContent($content);
+                $response->setContentFile($filePath);
             });
 
             // get a directory listing

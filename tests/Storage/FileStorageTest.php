@@ -34,16 +34,16 @@ class FileStorageTest extends PHPUnit_Framework_TestCase
         $this->assertTrue($f->putFile("/foo/bar/test.json", "[]", "application/json"));
         $this->assertTrue($f->putFile("/foo/bar/foobar/foobaz/test.html", "<html></html>", "text/html"));
         
-        $content = $f->getFile("/foo/bar/demo.txt", $mimeType);
-        $this->assertEquals("Hello World", $content);
+        $filePath = $f->getFile("/foo/bar/demo.txt", $mimeType);
+        $this->assertEquals("Hello World", file_get_contents($filePath));
         $this->assertEquals("text/plain", $mimeType);
 
-        $content = $f->getFile("/foo/bar/test.json", $mimeType);
-        $this->assertEquals("[]", $content);
+        $filePath = $f->getFile("/foo/bar/test.json", $mimeType);
+        $this->assertEquals("[]", file_get_contents($filePath));
         $this->assertEquals("application/json", $mimeType);
 
-        $content = $f->getFile("/foo/bar/foobar/foobaz/test.html", $mimeType);
-        $this->assertEquals("<html></html>", $content);
+        $filePath = $f->getFile("/foo/bar/foobar/foobaz/test.html", $mimeType);
+        $this->assertEquals("<html></html>", file_get_contents($filePath));
         $this->assertEquals("text/html", $mimeType);
 
         // FIXME: the time is only correct if the test runs fast enough...

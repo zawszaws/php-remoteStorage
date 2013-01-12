@@ -73,7 +73,7 @@ class RemoteStorageTest extends PHPUnit_Framework_TestCase
         $response = $r->handleRequest($h);
         $this->assertEquals('application/json', $response->getHeader('Content-Type'));
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals('["a","b","c","d"]', $response->getContent());
+        $this->assertEquals('["a","b","c","d"]', file_get_contents($response->getContentFile()));
     }
 
     public function testListPublicFiles()
@@ -169,7 +169,7 @@ class RemoteStorageTest extends PHPUnit_Framework_TestCase
         $response = $r->handleRequest($h);
         $this->assertEquals('application/json', $response->getHeader('Content-Type'));
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals('["a","b","c","d"]', $response->getContent());
+        $this->assertEquals('["a","b","c","d"]', file_get_contents($response->getContentFile()));
     }
 
     private function _rrmdir($dir)

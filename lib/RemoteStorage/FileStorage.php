@@ -52,7 +52,7 @@ class FileStorage
      *
      * @param string $path the relative path from the API root to the
      *                              file, not ending with a "/"
-     * @return mixed the file contents on success, or FALSE when
+     * @return mixed the full file path on success, or FALSE when
      *                              the file does not exist
      * @throws FileStorageException if the file could not be read
      */
@@ -61,21 +61,15 @@ class FileStorage
         if (strrpos($path, "/") === strlen($path) - 1) {
             return FALSE;
         }
-        $file = realpath($this->_config->getValue('filesDirectory') . $path);
-        if (FALSE === $file || !is_file($file)) {
+        $filePath = realpath($this->_config->getValue('filesDirectory') . $path);
+        if (FALSE === $filePath || !is_file($filePath)) {
             return FALSE;
         }
 
-        // FIXME: implement X-SendFile
-        $fileContent = file_get_contents($file);
-        if (FALSE === $fileContent) {
-            throw new FileStorageException("file could not be read");
-        }
-
         $m = new MimeHandler($this->_config);
-        $mimeType = $m->getMimeType($file);
+        $mimeType = $m->getMimeType($filePath);
 
-        return $fileContent;
+        return $filePath;
     }
 
     /**

@@ -33,7 +33,7 @@ class FileStorageTest extends PHPUnit_Framework_TestCase
         $this->assertTrue($f->putFile("/foo/bar/demo.txt", "Hello World", "text/plain"));
         $this->assertTrue($f->putFile("/foo/bar/test.json", "[]", "application/json"));
         $this->assertTrue($f->putFile("/foo/bar/foobar/foobaz/test.html", "<html></html>", "text/html"));
-        
+
         $filePath = $f->getFile("/foo/bar/demo.txt", $mimeType);
         $this->assertEquals("Hello World", file_get_contents($filePath));
         $this->assertEquals("text/plain", $mimeType);

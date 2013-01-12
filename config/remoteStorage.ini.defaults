@@ -12,6 +12,12 @@ mimeHandler = "json"
 ; "xattr" extension
 ; mimeHandler = "xattr"
 
+; whether or not to use X-Sendfile to send a file to the client. This SHOULD be
+; used in production, but requires mod_xsendfile for Apache and a matching 
+; Apache configuration.
+; useXSendfile = true
+useXSendfile = false
+
 ; OAuth AS
 [OAuth]
 tokenInfoEndpoint = "http://localhost/php-oauth/tokeninfo.php"

@@ -32,6 +32,7 @@ class RemoteStorage
 
         $service = $this->_fs; // FIXME: can this be avoided??
         $rs = $this->_rs; // FIXME: can this be avoided??
+        $config = $this->_config; // FIXME: can this be avoided??
 
         try {
             $request->matchRest("OPTIONS", NULL, function() use ($response) {
@@ -44,7 +45,7 @@ class RemoteStorage
             ################
 
             // get a file
-            $request->matchRest("GET", "/:user/public/:module/:path+", function($user, $module, $path) use ($rs, $request, &$response, $service) {
+            $request->matchRest("GET", "/:user/public/:module/:path+", function($user, $module, $path) use ($rs, $request, &$response, $service, $config) {
                 // no auth required
                 $filePath = $service->getFile($request->getPathInfo(), $contentType);
                 if (FALSE === $filePath) {
@@ -52,6 +53,9 @@ class RemoteStorage
                 }
                 $response->setContentType($contentType);
                 $response->setContentFile($filePath);
+                if ($config->getValue('useXSendfile')) {
+                    $response->useXSendfile(TRUE);
+                }
             });
 
             // get a directory listing
@@ -110,7 +114,7 @@ class RemoteStorage
             // module, it matches below here with module "public" and file "hello.txt". BAD.
 
             // get a file
-            $request->matchRest("GET", "/:user/:module/:path+", function($user, $module, $path) use ($rs, $request, &$response, $service) {
+            $request->matchRest("GET", "/:user/:module/:path+", function($user, $module, $path) use ($rs, $request, &$response, $service, $config) {
                 // auth required
                 $rs->verifyAuthorization($request->getHeader("Authorization"), $request->getQueryParameters());
                 if ($user !== $rs->getResourceOwnerId()) {
@@ -124,6 +128,9 @@ class RemoteStorage
                 }
                 $response->setContentType($contentType);
                 $response->setContentFile($filePath);
+                if ($config->getValue('useXSendfile')) {
+                    $response->useXSendfile(TRUE);
+                }
             });
 
             // get a directory listing

@@ -3,6 +3,8 @@
 require_once 'lib/_autoload.php';
 
 use \RemoteStorage\RemoteStorage as RemoteStorage;
+use \RemoteStorage\MimeHandler as MimeHandler;
+
 use \RestService\Utils\Config as Config;
 use \RestService\Http\HttpRequest as HttpRequest;
 
@@ -15,28 +17,6 @@ class RemoteStorageTest extends PHPUnit_Framework_TestCase
     {
         $this->_tmpDir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . "remoteStorage_" . rand();
         mkdir($this->_tmpDir);
-        // we need to add some initial files to the directory...
-        // create some module directories
-        $modules = array("contacts", "calendar", "money", "music", "video");
-        $users = array ("admin", "teacher", "bmcatee");
-        foreach ($users as $u) {
-            foreach ($modules as $m) {
-                $privateDir = $this->_tmpDir . DIRECTORY_SEPARATOR . $u . DIRECTORY_SEPARATOR . $m;
-                $publicDir = $this->_tmpDir . DIRECTORY_SEPARATOR . $u . DIRECTORY_SEPARATOR . "public" . DIRECTORY_SEPARATOR . $m;
-                mkdir($privateDir, 0775, TRUE);
-                mkdir($publicDir, 0775, TRUE);
-                // add some files to it
-                for ($i = 0; $i < 5; $i++) {
-                    file_put_contents($privateDir . DIRECTORY_SEPARATOR . $i.".json", json_encode(array("a", "b", "c", "d")));
-                    file_put_contents($publicDir . DIRECTORY_SEPARATOR . $i.".json", json_encode(array("a", "b", "c", "d")));
-                }
-                $privateSubDir = $privateDir . DIRECTORY_SEPARATOR . "sub";
-                mkdir($privateSubDir, 0775, TRUE);
-                for ($i = 0; $i < 5; $i++) {
-                    file_put_contents($privateSubDir . DIRECTORY_SEPARATOR . $i.".json", json_encode(array("a", "b", "c", "d")));
-                }
-            }
-        }
 
         // load default config
         $this->_c = new Config(dirname(dirname(__DIR__)) . DIRECTORY_SEPARATOR . "config" . DIRECTORY_SEPARATOR . "remoteStorage.ini.defaults");
@@ -46,6 +26,38 @@ class RemoteStorageTest extends PHPUnit_Framework_TestCase
         // point to a mock file instead of a "real" URL
         $tokenInfoFile = "file://" . __DIR__ . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR;
         $this->_c->setSectionValue("OAuth", "tokenInfoEndpoint", $tokenInfoFile);
+
+        // we need to add some initial files to the directory...
+        // create some module directories
+        $modules = array("contacts", "calendar", "money", "music", "video");
+        $users = array ("admin", "teacher", "bmcatee");
+
+        $mime = new MimeHandler($this->_c);
+
+        foreach ($users as $u) {
+            foreach ($modules as $m) {
+                $privateDir = $this->_tmpDir . DIRECTORY_SEPARATOR . $u . DIRECTORY_SEPARATOR . $m;
+                $publicDir = $this->_tmpDir . DIRECTORY_SEPARATOR . $u . DIRECTORY_SEPARATOR . "public" . DIRECTORY_SEPARATOR . $m;
+                mkdir($privateDir, 0775, TRUE);
+                mkdir($publicDir, 0775, TRUE);
+                // add some files to it
+                for ($i = 0; $i < 5; $i++) {
+                    $privateFile = $privateDir . DIRECTORY_SEPARATOR . $i.".json";
+                    file_put_contents($privateFile, json_encode(array("a", "b", "c", "d")));
+                    $mime->setMimeType($privateFile, "application/json");
+                    $publicFile = $publicDir . DIRECTORY_SEPARATOR . $i.".json";
+                    file_put_contents($publicFile, json_encode(array("a", "b", "c", "d")));
+                    $mime->setMimeType($publicFile, "application/json");
+                }
+                $privateSubDir = $privateDir . DIRECTORY_SEPARATOR . "sub";
+                mkdir($privateSubDir, 0775, TRUE);
+                for ($i = 0; $i < 5; $i++) {
+                    $privateSubDirFile = $privateSubDir . DIRECTORY_SEPARATOR . $i.".json";
+                    file_put_contents($privateSubDirFile, json_encode(array("a", "b", "c", "d")));
+                    $mime->setMimeType($privateSubDirFile, "application/json");
+                }
+            }
+        }
     }
 
     public function tearDown()
@@ -72,7 +84,7 @@ class RemoteStorageTest extends PHPUnit_Framework_TestCase
         $response = $r->handleRequest($h);
         $this->assertEquals('application/json', $response->getHeader('Content-Type'));
         $this->assertEquals(401, $response->getStatusCode());
-        $this->assertEquals('{"error":"no_token","error_description":"no authorization header in the request"}', $response->getContent());
+        $this->assertEquals('{"error":"no_token","error_description":"no access token provided"}', $response->getContent());
         $this->assertEquals('Bearer realm="remoteStorage Server"', $response->getHeader("WWW-Authenticate"));
     }
 

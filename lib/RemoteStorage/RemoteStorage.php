@@ -80,7 +80,7 @@ class RemoteStorage
                 $rs->requireAnyScope(array("$module:rw", "root:rw"));
 
                 // FIXME: deal with Content-Type
-                $result = $service->putFile($request->getPathInfo(), $request->getContent());
+                $result = $service->putFile($request->getPathInfo(), $request->getContent(), $request->getContentType());
                 if (FALSE === $result) {
                     throw new RemoteStorageException("invalid_request", "unable to store file");
                 }

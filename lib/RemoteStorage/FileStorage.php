@@ -108,10 +108,12 @@ class FileStorage
             return FALSE;
         }
 
+        $result = file_put_contents($file, $fileData);
+
         $m = new MimeHandler($this->_config);
         $m->setMimeType($file, $mimeType);
 
-        return FALSE !== file_put_contents($file, $fileData);
+        return FALSE !== $result;
     }
 
     /**

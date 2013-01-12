@@ -30,16 +30,30 @@ class FileStorageTest extends PHPUnit_Framework_TestCase
     public function testUploadAndGetFile()
     {
         $f = new FileStorage($this->_c);
-        $this->assertTrue($f->putFile("/foo/bar/demo.txt", "Hello World"));
-        $this->assertTrue($f->putFile("/foo/bar/test.txt", "Hello Test"));
-        $this->assertTrue($f->putFile("/foo/bar/foobar/foobaz/test.txt", "Hello Foo"));
-        $this->assertEquals("Hello World", $f->getFile("/foo/bar/demo.txt"));
-        $this->assertEquals("Hello Test", $f->getFile("/foo/bar/test.txt"));
-        $this->assertEquals("Hello Foo", $f->getFile("/foo/bar/foobar/foobaz/test.txt"));
+        $this->assertTrue($f->putFile("/foo/bar/demo.txt", "Hello World", "text/plain"));
+        $this->assertTrue($f->putFile("/foo/bar/test.json", "[]", "application/json"));
+        $this->assertTrue($f->putFile("/foo/bar/foobar/foobaz/test.html", "<html></html>", "text/html"));
+        
+        $content = $f->getFile("/foo/bar/demo.txt", $mimeType);
+        $this->assertEquals("Hello World", $content);
+        $this->assertEquals("text/plain", $mimeType);
+
+        $content = $f->getFile("/foo/bar/test.json", $mimeType);
+        $this->assertEquals("[]", $content);
+        $this->assertEquals("application/json", $mimeType);
+
+        $content = $f->getFile("/foo/bar/foobar/foobaz/test.html", $mimeType);
+        $this->assertEquals("<html></html>", $content);
+        $this->assertEquals("text/html", $mimeType);
+
         // FIXME: the time is only correct if the test runs fast enough...
-        $this->assertEquals(array("demo.txt" => time(), "test.txt" => time(), "foobar/" => time()), $f->getDir("/foo/bar/"));
-        $this->assertEquals(array("test.txt" => time()), $f->getDir("/foo/bar/foobar/foobaz/"));
+        $this->assertEquals(array("demo.txt" => time(), "test.json" => time(), "foobar/" => time()), $f->getDir("/foo/bar/"));
+        $this->assertEquals(array("test.html" => time()), $f->getDir("/foo/bar/foobar/foobaz/"));
+
         $this->assertTrue($f->deleteFile("/foo/bar/demo.txt"));
+        $this->assertTrue($f->deleteFile("/foo/bar/test.json"));
+        $this->assertTrue($f->deleteFile("/foo/bar/foobar/foobaz/test.html"));
+
     }
 
     public function testGetDirListOnFile()
@@ -51,21 +65,21 @@ class FileStorageTest extends PHPUnit_Framework_TestCase
     public function testFileFromDir()
     {
         $f = new FileStorage($this->_c);
-        $this->assertTrue($f->putFile("/foo/bar/demo.txt", "Hello World"));
-        $this->assertFalse($f->getFile("/foo/bar/"));
+        $this->assertTrue($f->putFile("/foo/bar/demo.txt", "Hello World", "text/plain"));
+        $this->assertFalse($f->getFile("/foo/bar/", $mimeType));
     }
 
     public function testDeleteDir()
     {
         $f = new FileStorage($this->_c);
-        $this->assertTrue($f->putFile("/foo/bar/demo.txt", "Hello World"));
+        $this->assertTrue($f->putFile("/foo/bar/demo.txt", "Hello World", "text/plain"));
         $this->assertFalse($f->deleteFile("/foo/bar/"));
     }
 
     public function testPutDir()
     {
         $f = new FileStorage($this->_c);
-        $this->assertFalse($f->putFile("/foo/bar/demo.txt/", "Hello World"));
+        $this->assertFalse($f->putFile("/foo/bar/demo.txt/", "Hello World", "text/plain"));
     }
 
     private function _rrmdir($dir)

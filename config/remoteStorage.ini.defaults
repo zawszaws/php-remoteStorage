@@ -20,8 +20,8 @@ useXSendfile = false
 
 ; OAuth AS
 [OAuth]
-tokenInfoEndpoint = "http://localhost/php-oauth/tokeninfo.php"
-resourceServerRealm = "remoteStorage Server"
+introspectionEndpoint = "http://localhost/php-oauth/introspect.php"
+realm = "remoteStorage Server"
 
 ; Logging
 [Log]

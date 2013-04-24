@@ -24,8 +24,8 @@ class RemoteStorageTest extends PHPUnit_Framework_TestCase
         // override DB config in memory only
         $this->_c->setValue("filesDirectory", $this->_tmpDir);
         // point to a mock file instead of a "real" URL
-        $tokenInfoFile = "file://" . __DIR__ . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR;
-        $this->_c->setSectionValue("OAuth", "tokenInfoEndpoint", $tokenInfoFile);
+        $introspectionFile = "file://" . __DIR__ . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR;
+        $this->_c->setSectionValue("OAuth", "introspectionEndpoint", $introspectionFile);
 
         // we need to add some initial files to the directory...
         // create some module directories
@@ -84,7 +84,7 @@ class RemoteStorageTest extends PHPUnit_Framework_TestCase
         $response = $r->handleRequest($h);
         $this->assertEquals('application/json', $response->getHeader('Content-Type'));
         $this->assertEquals(401, $response->getStatusCode());
-        $this->assertEquals('{"error":"no_token","error_description":"no access token provided"}', $response->getContent());
+        $this->assertEquals('{"error":"no_token","error_description":"missing token"}', $response->getContent());
         $this->assertEquals('Bearer realm="remoteStorage Server"', $response->getHeader("WWW-Authenticate"));
     }
 

@@ -1,9 +1,6 @@
 {
-    "attributes": [],
-    "audience": "debug_client", 
+    "active": true,
     "client_id": "debug_client", 
-    "expires_in": 3577, 
-    "resource_owner_id": "admin", 
-    "scope": "money:r money:rw", 
-    "user_id": "admin"
+    "sub": "admin",
+    "scope": "money:r money:rw"
 }

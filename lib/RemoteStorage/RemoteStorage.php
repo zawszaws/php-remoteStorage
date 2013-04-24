@@ -199,6 +199,7 @@ class RemoteStorage
                 $this->_logger->logFatal($e->getLogMessage(TRUE) . PHP_EOL . $request . PHP_EOL . $response);
             }
         } catch (RemoteResourceServerException $e) {
+            $e->setRealm($this->_config->getSectionValue("OAuth", "realm"));
             $response = new HttpResponse($e->getResponseCode());
             $response->setHeader("WWW-Authenticate", $e->getAuthenticateHeader());
             $response->setHeader("Content-Type", "application/json");

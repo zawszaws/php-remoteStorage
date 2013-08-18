@@ -1,12 +1,12 @@
 <?php
 
-require_once 'lib/_autoload.php';
+require_once 'vendor/autoload.php';
 
-use \RemoteStorage\RemoteStorage as RemoteStorage;
-use \RemoteStorage\MimeHandler as MimeHandler;
+use RemoteStorage\RemoteStorage;
+use RemoteStorage\MimeHandler;
 
-use \RestService\Utils\Config as Config;
-use \RestService\Http\HttpRequest as HttpRequest;
+use RestService\Utils\Config;
+use RestService\Http\HttpRequest;
 
 class RemoteStorageTest extends PHPUnit_Framework_TestCase
 {

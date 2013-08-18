@@ -1,9 +1,9 @@
 <?php
 
-require_once 'lib/_autoload.php';
+require_once 'vendor/autoload.php';
 
-use \RemoteStorage\FileStorage as FileStorage;
-use \RestService\Utils\Config as Config;
+use RemoteStorage\FileStorage;
+use RestService\Utils\Config;
 
 class FileStorageTest extends PHPUnit_Framework_TestCase
 {

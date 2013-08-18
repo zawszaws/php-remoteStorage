@@ -2,13 +2,13 @@
 
 namespace RemoteStorage;
 
-use \RestService\Utils\Config as Config;
-use \RestService\Utils\Logger as Logger;
-use \RestService\Http\HttpRequest as HttpRequest;
-use \RestService\Http\HttpResponse as HttpResponse;
+use RestService\Utils\Config;
+use RestService\Utils\Logger;
+use RestService\Http\HttpRequest;
+use RestService\Http\HttpResponse;
 
-use \OAuth\RemoteResourceServer as RemoteResourceServer;
-use \OAuth\RemoteResourceServerException as RemoteResourceServerException;
+use fkooman\oauth\rs\RemoteResourceServer;
+use fkooman\oauth\rs\RemoteResourceServerException;
 
 class RemoteStorage
 {

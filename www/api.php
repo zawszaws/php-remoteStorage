@@ -1,14 +1,14 @@
 <?php
 
-require_once dirname(__DIR__) . DIRECTORY_SEPARATOR . "lib" . DIRECTORY_SEPARATOR . "_autoload.php";
+require_once dirname(__DIR__) . "/vendor/autoload.php";
 
-use \RestService\Http\HttpRequest as HttpRequest;
-use \RestService\Http\HttpResponse as HttpResponse;
-use \RestService\Http\IncomingHttpRequest as IncomingHttpRequest;
-use \RestService\Utils\Config as Config;
-use \RestService\Utils\Logger as Logger;
+use RestService\Http\HttpRequest;
+use RestService\Http\HttpResponse;
+use RestService\Http\IncomingHttpRequest;
+use RestService\Utils\Config;
+use RestService\Utils\Logger;
 
-use \RemoteStorage\RemoteStorage as RemoteStorage;
+use RemoteStorage\RemoteStorage;
 
 $logger = NULL;
 $request = NULL;

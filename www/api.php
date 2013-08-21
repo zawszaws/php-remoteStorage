@@ -8,6 +8,8 @@ use RestService\Http\IncomingHttpRequest;
 use RestService\Utils\Config;
 use RestService\Utils\Logger;
 
+use Guzzle\Http\Client;
+
 use RemoteStorage\RemoteStorage;
 
 $logger = NULL;
@@ -18,7 +20,9 @@ try {
     $config = new Config(dirname(__DIR__) . DIRECTORY_SEPARATOR . "config" . DIRECTORY_SEPARATOR . "remoteStorage.ini");
     $logger = new Logger($config->getSectionValue('Log', 'logLevel'), $config->getValue('serviceName'), $config->getSectionValue('Log', 'logFile'), $config->getSectionValue('Log', 'logMail', FALSE));
 
-    $remoteStorage = new RemoteStorage($config, $logger);
+    $client = new Client($config->getSectionValue('OAuth', 'introspectionEndpoint'));
+
+    $remoteStorage = new RemoteStorage($config, $logger, $client);
     $request = HttpRequest::fromIncomingHttpRequest(new IncomingHttpRequest());
     $response = $remoteStorage->handleRequest($request);
 

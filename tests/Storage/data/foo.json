@@ -1,6 +1,0 @@
-{
-    "active": true,
-    "client_id": "debug_client", 
-    "sub": "admin",
-    "scope": "money:r money:rw"
-}

@@ -1,9 +1,9 @@
 <?php
 
-namespace RemoteStorage;
+namespace fkooman\remotestorage;
 
-use \RestService\Utils\Config as Config;
-use \RestService\Utils\Logger as Logger;
+use RestService\Utils\Config;
+use RestService\Utils\Logger;
 
 class FileStorage
 {

@@ -2,8 +2,8 @@
 
 require_once 'vendor/autoload.php';
 
-use RemoteStorage\RemoteStorage;
-use RemoteStorage\MimeHandler;
+use fkooman\remotestorage\RemoteStorage;
+use fkooman\remotestorage\MimeHandler;
 
 use RestService\Utils\Config;
 use RestService\Http\HttpRequest;
@@ -26,7 +26,7 @@ class RemoteStorageTest extends PHPUnit_Framework_TestCase
         mkdir($this->_tmpDir);
 
         // load default config
-        $this->_c = new Config(dirname(dirname(__DIR__)) . DIRECTORY_SEPARATOR . "config" . DIRECTORY_SEPARATOR . "remoteStorage.ini.defaults");
+        $this->_c = new Config(dirname(dirname(dirname(__DIR__))) . DIRECTORY_SEPARATOR . "config" . DIRECTORY_SEPARATOR . "remoteStorage.ini.defaults");
 
         // override DB config in memory only
         $this->_c->setValue("filesDirectory", $this->_tmpDir);

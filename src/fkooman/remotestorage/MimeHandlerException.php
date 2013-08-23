@@ -1,6 +1,6 @@
 <?php
 
-namespace RemoteStorage;
+namespace fkooman\remotestorage;
 
 class MimeHandlerException extends \Exception
 {

@@ -1,8 +1,8 @@
 <?php
 
-namespace RemoteStorage;
+namespace fkooman\remotestorage;
 
-use \RestService\Utils\Config as Config;
+use RestService\Utils\Config;
 
 class MimeHandler
 {

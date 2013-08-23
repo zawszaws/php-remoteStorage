@@ -1,6 +1,6 @@
 <?php
 
-namespace RemoteStorage;
+namespace fkooman\remotestorage;
 
 use RestService\Utils\Config;
 use RestService\Utils\Logger;

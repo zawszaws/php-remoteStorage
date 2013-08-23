@@ -5,22 +5,22 @@ require_once dirname(__DIR__) . "/vendor/autoload.php";
 use RestService\Http\HttpRequest;
 use RestService\Http\HttpResponse;
 use RestService\Http\IncomingHttpRequest;
-use RestService\Utils\Config;
+use fkooman\Config\Config;
 use RestService\Utils\Logger;
 
 use Guzzle\Http\Client;
 
-use RemoteStorage\RemoteStorage;
+use fkooman\remotestorage\RemoteStorage;
 
 $logger = NULL;
 $request = NULL;
 $response = NULL;
 
 try {
-    $config = new Config(dirname(__DIR__) . DIRECTORY_SEPARATOR . "config" . DIRECTORY_SEPARATOR . "remoteStorage.ini");
-    $logger = new Logger($config->getSectionValue('Log', 'logLevel'), $config->getValue('serviceName'), $config->getSectionValue('Log', 'logFile'), $config->getSectionValue('Log', 'logMail', FALSE));
+    $config = Config::fromIniFile(dirname(__DIR__) . DIRECTORY_SEPARATOR . "config" . DIRECTORY_SEPARATOR . "remoteStorage.ini");
+    $logger = new Logger($config->getSection('Log')->getValue('logLevel'), $config->getValue('serviceName'), $config->getSection('Log')->getValue('logFile'), $config->getSection('Log')->getValue('logMail'));
 
-    $client = new Client($config->getSectionValue('OAuth', 'introspectionEndpoint'));
+    $client = new Client($config->getSection('OAuth')->getValue('introspectionEndpoint'));
 
     $remoteStorage = new RemoteStorage($config, $logger, $client);
     $request = HttpRequest::fromIncomingHttpRequest(new IncomingHttpRequest());

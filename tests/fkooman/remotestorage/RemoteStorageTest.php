@@ -5,7 +5,7 @@ require_once 'vendor/autoload.php';
 use fkooman\remotestorage\RemoteStorage;
 use fkooman\remotestorage\MimeHandler;
 
-use RestService\Utils\Config;
+use fkooman\Config\Config;
 use RestService\Http\HttpRequest;
 
 class RemoteStorageTest extends PHPUnit_Framework_TestCase
@@ -26,13 +26,12 @@ class RemoteStorageTest extends PHPUnit_Framework_TestCase
         mkdir($this->_tmpDir);
 
         // load default config
-        $this->_c = new Config(dirname(dirname(dirname(__DIR__))) . DIRECTORY_SEPARATOR . "config" . DIRECTORY_SEPARATOR . "remoteStorage.ini.defaults");
+        $this->_c = Config::fromIniFile(dirname(dirname(dirname(__DIR__))) . DIRECTORY_SEPARATOR . "config" . DIRECTORY_SEPARATOR . "remoteStorage.ini.defaults");
 
-        // override DB config in memory only
-        $this->_c->setValue("filesDirectory", $this->_tmpDir);
-        // point to a mock file instead of a "real" URL
-        $introspectionFile = "file://" . __DIR__ . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR;
-        $this->_c->setSectionValue("OAuth", "introspectionEndpoint", $introspectionFile);
+        $configData = $this->_c->toArray();
+        $configData["filesDirectory"] = $this->_tmpDir;
+
+        $this->_c = new Config($configData);
 
         // we need to add some initial files to the directory...
         // create some module directories

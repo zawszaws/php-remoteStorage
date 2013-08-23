@@ -2,7 +2,7 @@
 
 namespace fkooman\remotestorage;
 
-use RestService\Utils\Config;
+use fkooman\Config\Config;
 use RestService\Utils\Logger;
 
 class FileStorage

@@ -3,7 +3,6 @@
 namespace fkooman\remotestorage;
 
 use fkooman\Config\Config;
-use RestService\Utils\Logger;
 use RestService\Http\HttpRequest;
 use RestService\Http\HttpResponse;
 
@@ -15,15 +14,13 @@ use Guzzle\Http\Client;
 class RemoteStorage
 {
     private $_config;
-    private $_logger;
     private $_rs;
 
-    public function __construct(Config $c, Logger $l = NULL, Client $client)
+    public function __construct(Config $c, Client $client)
     {
         $this->_config = $c;
-        $this->_logger = $l;
         $this->_rs = new ResourceServer($client);
-        $this->_fs = new FileStorage($this->_config, $this->_logger);
+        $this->_fs = new FileStorage($this->_config);
     }
 
     public function handleRequest(HttpRequest $request)
@@ -196,9 +193,6 @@ class RemoteStorage
             $response = new HttpResponse($e->getResponseCode());
             $response->setHeader("Content-Type", "application/json");
             $response->setContent(json_encode(array("error" => $e->getMessage(), "error_description" => $e->getDescription())));
-            if (NULL !== $this->_logger) {
-                $this->_logger->logFatal($e->getLogMessage(TRUE) . PHP_EOL . $request . PHP_EOL . $response);
-            }
         } catch (ResourceServerException $e) {
             $e->setRealm($this->_config->getSection("OAuth")->getValue("realm"));
             $response = new HttpResponse($e->getStatusCode());
@@ -212,9 +206,6 @@ class RemoteStorage
                     )
                 )
             );
-            if (NULL !== $this->_logger) {
-                $this->_logger->logWarn($e->getMessage() . PHP_EOL . $e->getDescription() . PHP_EOL . $request . PHP_EOL . $response);
-            }
         }
 
         return $response;

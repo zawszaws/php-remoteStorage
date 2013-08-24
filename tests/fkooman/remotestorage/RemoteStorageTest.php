@@ -75,7 +75,7 @@ class RemoteStorageTest extends PHPUnit_Framework_TestCase
     {
         $h = new HttpRequest("http://localhost/php-remoteStorage/api.php", "GET");
         $h->setPathInfo("/admin/public/money/1.json");
-        $r = new RemoteStorage($this->_c, NULL, $this->_client);
+        $r = new RemoteStorage($this->_c, $this->_client);
         $response = $r->handleRequest($h);
         $this->assertEquals('application/json', $response->getHeader('Content-Type'));
         $this->assertEquals(200, $response->getStatusCode());
@@ -86,7 +86,7 @@ class RemoteStorageTest extends PHPUnit_Framework_TestCase
     {
         $h = new HttpRequest("http://localhost/php-remoteStorage/api.php", "GET");
         $h->setPathInfo("/admin/public/money/");
-        $r = new RemoteStorage($this->_c, NULL, $this->_client);
+        $r = new RemoteStorage($this->_c, $this->_client);
         $response = $r->handleRequest($h);
         $this->assertEquals('application/json', $response->getHeader('Content-Type'));
         $this->assertEquals(401, $response->getStatusCode());
@@ -101,7 +101,7 @@ class RemoteStorageTest extends PHPUnit_Framework_TestCase
         $h->setHeader("Content-Type", "text/plain");
         $h->setContent("Hello World!");
         $h->setHeader("Authorization", "Bearer foo");
-        $r = new RemoteStorage($this->_c, NULL, $this->_client);
+        $r = new RemoteStorage($this->_c, $this->_client);
         $response = $r->handleRequest($h);
         $this->assertEquals('application/json', $response->getHeader('Content-Type'));
         $this->assertEquals(200, $response->getStatusCode());
@@ -112,7 +112,7 @@ class RemoteStorageTest extends PHPUnit_Framework_TestCase
         $h = new HttpRequest("http://localhost/php-remoteStorage/api.php", "DELETE");
         $h->setPathInfo("/admin/public/money/1.json");
         $h->setHeader("Authorization", "Bearer foo");
-        $r = new RemoteStorage($this->_c, NULL, $this->_client);
+        $r = new RemoteStorage($this->_c, $this->_client);
         $response = $r->handleRequest($h);
         $this->assertEquals('application/json', $response->getHeader('Content-Type'));
         $this->assertEquals(200, $response->getStatusCode());
@@ -123,7 +123,7 @@ class RemoteStorageTest extends PHPUnit_Framework_TestCase
         $h = new HttpRequest("http://localhost/php-remoteStorage/api.php", "GET");
         $h->setPathInfo("/admin/public/money/");
         $h->setHeader("Authorization", "Bearer foo");
-        $r = new RemoteStorage($this->_c, NULL, $this->_client);
+        $r = new RemoteStorage($this->_c, $this->_client);
         $response = $r->handleRequest($h);
         $this->assertEquals('application/json', $response->getHeader('Content-Type'));
         $this->assertEquals(200, $response->getStatusCode());
@@ -135,7 +135,7 @@ class RemoteStorageTest extends PHPUnit_Framework_TestCase
         $h = new HttpRequest("http://localhost/php-remoteStorage/api.php", "GET");
         $h->setPathInfo("/admin/public/calendar/");
         $h->setHeader("Authorization", "Bearer foo");
-        $r = new RemoteStorage($this->_c, NULL, $this->_client);
+        $r = new RemoteStorage($this->_c, $this->_client);
         $response = $r->handleRequest($h);
         $this->assertEquals('application/json', $response->getHeader('Content-Type'));
         $this->assertEquals(403, $response->getStatusCode());
@@ -147,7 +147,7 @@ class RemoteStorageTest extends PHPUnit_Framework_TestCase
         $h = new HttpRequest("http://localhost/php-remoteStorage/api.php", "GET");
         $h->setPathInfo("/teacher/public/calendar/");
         $h->setHeader("Authorization", "Bearer foo");
-        $r = new RemoteStorage($this->_c, NULL, $this->_client);
+        $r = new RemoteStorage($this->_c, $this->_client);
         $response = $r->handleRequest($h);
         $this->assertEquals('application/json', $response->getHeader('Content-Type'));
         $this->assertEquals(403, $response->getStatusCode());
@@ -159,7 +159,7 @@ class RemoteStorageTest extends PHPUnit_Framework_TestCase
         $h = new HttpRequest("http://localhost/php-remoteStorage/api.php", "GET");
         $h->setPathInfo("/admin/money/sub/");
         $h->setHeader("Authorization", "Bearer foo");
-        $r = new RemoteStorage($this->_c, NULL, $this->_client);
+        $r = new RemoteStorage($this->_c, $this->_client);
         $response = $r->handleRequest($h);
         $this->assertEquals('application/json', $response->getHeader('Content-Type'));
         $this->assertEquals(200, $response->getStatusCode());
@@ -171,7 +171,7 @@ class RemoteStorageTest extends PHPUnit_Framework_TestCase
         $h = new HttpRequest("http://localhost/php-remoteStorage/api.php", "GET");
         $h->setPathInfo("/admin/money/sub/1.json");
         $h->setHeader("Authorization", "Bearer foo");
-        $r = new RemoteStorage($this->_c, NULL, $this->_client);
+        $r = new RemoteStorage($this->_c, $this->_client);
         $response = $r->handleRequest($h);
         $this->assertEquals('application/json', $response->getHeader('Content-Type'));
         $this->assertEquals(200, $response->getStatusCode());

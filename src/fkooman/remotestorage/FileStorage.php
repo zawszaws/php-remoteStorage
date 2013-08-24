@@ -3,17 +3,14 @@
 namespace fkooman\remotestorage;
 
 use fkooman\Config\Config;
-use RestService\Utils\Logger;
 
 class FileStorage
 {
     private $_config;
-    private $_logger;
 
-    public function __construct(Config $c, Logger $l = NULL)
+    public function __construct(Config $c)
     {
         $this->_config = $c;
-        $this->_logger = $l;
     }
 
     /**

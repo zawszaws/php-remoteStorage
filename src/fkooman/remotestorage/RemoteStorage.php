@@ -13,14 +13,15 @@ use Guzzle\Http\Client;
 
 class RemoteStorage
 {
-    private $_config;
-    private $_rs;
+    private $config;
+    private $rs;
+    private $fs;
 
     public function __construct(Config $c, Client $client)
     {
-        $this->_config = $c;
-        $this->_rs = new ResourceServer($client);
-        $this->_fs = new FileStorage($this->_config);
+        $this->config = $c;
+        $this->rs = new ResourceServer($client);
+        $this->fs = new FileStorage($this->config);
     }
 
     public function handleRequest(HttpRequest $request)
@@ -28,12 +29,12 @@ class RemoteStorage
         $response = new HttpResponse(200, "application/json");
         $response->setHeader("Access-Control-Allow-Origin", "*");
 
-        $service = $this->_fs; // FIXME: can this be avoided??
-        $rs = $this->_rs; // FIXME: can this be avoided??
-        $config = $this->_config; // FIXME: can this be avoided??
+        $service = $this->fs; // FIXME: can this be avoided??
+        $rs = $this->rs; // FIXME: can this be avoided??
+        $config = $this->config; // FIXME: can this be avoided??
 
         try {
-            $request->matchRest("OPTIONS", NULL, function() use ($response) {
+            $request->matchRest("OPTIONS", null, function() use ($response) {
                 $response->setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, Origin");
                 $response->setHeader("Access-Control-Allow-Methods", "GET, PUT, DELETE");
             });
@@ -46,18 +47,18 @@ class RemoteStorage
             $request->matchRest("GET", "/:user/public/:module/:path+", function($user, $module, $path) use ($rs, $request, &$response, $service, $config) {
                 // no auth required
                 $filePath = $service->getFile($request->getPathInfo(), $contentType);
-                if (FALSE === $filePath) {
+                if (false === $filePath) {
                     throw new RemoteStorageException("not_found", "file not found");
                 }
                 $response->setContentType($contentType);
                 $response->setContentFile($filePath);
                 if ($config->getValue('useXSendfile')) {
-                    $response->useXSendfile(TRUE);
+                    $response->useXSendfile(true);
                 }
             });
 
             // get a directory listing
-            $request->matchRest("GET", "/:user/public/:module(/:path+)/", function($user, $module, $path = NULL) use ($rs, $request, &$response, $service) {
+            $request->matchRest("GET", "/:user/public/:module(/:path+)/", function($user, $module, $path = null) use ($rs, $request, &$response, $service) {
                 // auth required
                 $introspect = $rs->verifyRequest($request->getHeader("Authorization"), $request->getQueryParameter("access_token"));
                 if ($user !== $introspect->getSub()) {
@@ -66,7 +67,7 @@ class RemoteStorage
                 $this->requireAnyScope($introspect->getScope(), array("$module:r", "$module:rw", "root:r", "root:rw"));
 
                 $content = $service->getDir($request->getPathInfo());
-                if (FALSE === $content) {
+                if (false === $content) {
                     throw new RemoteStorageException("not_found", "directory not found");
                 }
                 $response->setContent(json_encode($content, JSON_FORCE_OBJECT));
@@ -83,7 +84,7 @@ class RemoteStorage
 
                 // FIXME: deal with Content-Type
                 $result = $service->putFile($request->getPathInfo(), $request->getContent(), $request->getContentType());
-                if (FALSE === $result) {
+                if (false === $result) {
                     throw new RemoteStorageException("invalid_request", "unable to store file");
                 }
             });
@@ -98,7 +99,7 @@ class RemoteStorage
                 $this->requireAnyScope($introspect->getScope(), array("$module:rw", "root:rw"));
 
                 $result = $service->deleteFile($request->getPathInfo());
-                if (FALSE === $result) {
+                if (false === $result) {
                     throw new RemoteStorageException("not_found", "file not found");
                 }
             });
@@ -121,18 +122,18 @@ class RemoteStorage
                 $this->requireAnyScope($introspect->getScope(), array("$module:r", "$module:rw", "root:r", "root:rw"));
 
                 $filePath = $service->getFile($request->getPathInfo(), $contentType);
-                if (FALSE === $filePath) {
+                if (false === $filePath) {
                     throw new RemoteStorageException("not_found", "file not found");
                 }
                 $response->setContentType($contentType);
                 $response->setContentFile($filePath);
                 if ($config->getValue('useXSendfile')) {
-                    $response->useXSendfile(TRUE);
+                    $response->useXSendfile(true);
                 }
             });
 
             // get a directory listing
-            $request->matchRest("GET", "/:user/:module(/:path+)/", function($user, $module, $path = NULL) use ($rs, $request, &$response, $service) {
+            $request->matchRest("GET", "/:user/:module(/:path+)/", function($user, $module, $path = null) use ($rs, $request, &$response, $service) {
                 // auth required
                 $introspect = $rs->verifyRequest($request->getHeader("Authorization"), $request->getQueryParameter("access_token"));
                 if ($user !== $introspect->getSub()) {
@@ -141,7 +142,7 @@ class RemoteStorage
                 $this->requireAnyScope($introspect->getScope(), array("$module:r", "$module:rw", "root:r", "root:rw"));
 
                 $content = $service->getDir($request->getPathInfo());
-                if (FALSE === $content) {
+                if (false === $content) {
                     throw new RemoteStorageException("not_found", "directory not found");
                 }
                 $response->setContent(json_encode($content, JSON_FORCE_OBJECT));
@@ -158,7 +159,7 @@ class RemoteStorage
 
                 // FIXME: deal with Content-Type
                 $result = $service->putFile($request->getPathInfo(), $request->getContent(), $request->getContentType());
-                if (FALSE === $result) {
+                if (false === $result) {
                     throw new RemoteStorageException("invalid_request", "unable to store file");
                 }
             });
@@ -173,7 +174,7 @@ class RemoteStorage
                 $this->requireAnyScope($introspect->getScope(), sarray("$module:rw", "root:rw"));
 
                 $result = $service->deleteFile($request->getPathInfo());
-                if (FALSE === $result) {
+                if (false === $result) {
                     throw new RemoteStorageException("not_found", "file not found");
                 }
             });
@@ -190,11 +191,11 @@ class RemoteStorage
             });
 
         } catch (RemoteStorageException $e) {
-            $response = new HttpResponse($e->getResponseCode());
+            $response = new HttpResponse($e->getStatusCode());
             $response->setHeader("Content-Type", "application/json");
             $response->setContent(json_encode(array("error" => $e->getMessage(), "error_description" => $e->getDescription())));
         } catch (ResourceServerException $e) {
-            $e->setRealm($this->_config->getSection("OAuth")->getValue("realm"));
+            $e->setRealm($this->config->getSection("OAuth")->getValue("realm"));
             $response = new HttpResponse($e->getStatusCode());
             $response->setHeader("WWW-Authenticate", $e->getAuthenticateHeader());
             $response->setHeader("Content-Type", "application/json");

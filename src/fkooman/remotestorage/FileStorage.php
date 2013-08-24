@@ -6,11 +6,11 @@ use fkooman\Config\Config;
 
 class FileStorage
 {
-    private $_config;
+    private $config;
 
     public function __construct(Config $c)
     {
-        $this->_config = $c;
+        $this->config = $c;
     }
 
     /**
@@ -25,15 +25,15 @@ class FileStorage
     public function getDir($path)
     {
         if (strrpos($path, "/") !== strlen($path) - 1) {
-            return FALSE;
+            return false;
         }
         $entries = array();
-        $dir = realpath($this->_config->getValue('filesDirectory') . $path);
-        if (FALSE !== $dir && is_dir($dir)) {
+        $dir = realpath($this->config->getValue('filesDirectory') . $path);
+        if (false !== $dir && is_dir($dir)) {
             $cwd = getcwd();
-            if (FALSE === @chdir($dir)) {
+            if (false === @chdir($dir)) {
                 // could not enter directory
-                return FALSE;
+                return false;
             }
             foreach (glob("*", GLOB_MARK) as $e) {
                 $entries[$e] = filemtime($e);
@@ -49,21 +49,21 @@ class FileStorage
      *
      * @param string $path the relative path from the API root to the
      *                              file, not ending with a "/"
-     * @return mixed the full file path on success, or FALSE when
+     * @return mixed the full file path on success, or false when
      *                              the file does not exist
      * @throws FileStorageException if the file could not be read
      */
     public function getFile($path, &$mimeType)
     {
         if (strrpos($path, "/") === strlen($path) - 1) {
-            return FALSE;
+            return false;
         }
-        $filePath = realpath($this->_config->getValue('filesDirectory') . $path);
-        if (FALSE === $filePath || !is_file($filePath)) {
-            return FALSE;
+        $filePath = realpath($this->config->getValue('filesDirectory') . $path);
+        if (false === $filePath || !is_file($filePath)) {
+            return false;
         }
 
-        $m = new MimeHandler($this->_config);
+        $m = new MimeHandler($this->config);
         $mimeType = $m->getMimeType($filePath);
 
         return $filePath;
@@ -75,36 +75,36 @@ class FileStorage
      * @param string $path the relative path from the API root to the
      *                              file, not ending with a "/"
      * @param  string               $fileData the contents of the file to be written
-     * @return boolean              TRUE on success, FALSE on failure
+     * @return boolean              true on success, false on failure
      * @throws FileStorageException if a directory needs to be created for
      *                              holding this file and that fails
      */
     public function putFile($path, $fileData, $mimeType)
     {
         if (strrpos($path, "/") === strlen($path) - 1) {
-            return FALSE;
+            return false;
         }
-        $file = $this->_config->getValue('filesDirectory') . $path;
+        $file = $this->config->getValue('filesDirectory') . $path;
         $directory = dirname($file);
         $dir = realpath($directory);
-        if (FALSE === $dir) {
-            $this->_createDirectory($directory);
+        if (false === $dir) {
+            $this->createDirectory($directory);
             $dir = realpath($directory);
-            if (FALSE === $dir) {
+            if (false === $dir) {
                 throw new FileStorageException("unable to create directory");
             }
         }
         if (!is_dir($dir)) {
             // parent of file already exists and is not a directory
-            return FALSE;
+            return false;
         }
 
         $result = file_put_contents($file, $fileData);
 
-        $m = new MimeHandler($this->_config);
+        $m = new MimeHandler($this->config);
         $m->setMimeType($file, $mimeType);
 
-        return FALSE !== $result;
+        return false !== $result;
     }
 
     /**
@@ -112,34 +112,33 @@ class FileStorage
      *
      * @param string $path the relative path from the API root to the
      *                              file, not ending with a "/"
-     * @return boolean              TRUE on success, FALSE on failure
+     * @return boolean              true on success, false on failure
      * @throws FileStorageException if the file could not be deleted, even
      *                              though it exists
      */
     public function deleteFile($path)
     {
         if (strrpos($path, "/") === strlen($path) - 1) {
-            return FALSE;
+            return false;
         }
-        $file = realpath($this->_config->getValue('filesDirectory') . $path);
-        if (FALSE === $file || !is_file($file)) {
-            return FALSE;
+        $file = realpath($this->config->getValue('filesDirectory') . $path);
+        if (false === $file || !is_file($file)) {
+            return false;
         }
 
-        if (@unlink($file) === FALSE) {
+        if (@unlink($file) === false) {
             throw new FileStorageException("unable to delete file");
         }
 
-        return TRUE;
+        return true;
     }
 
-    private function _createDirectory($dir)
+    private function createDirectory($dir)
     {
         if (!file_exists($dir)) {
-            if (@mkdir($dir, 0775, TRUE) === FALSE) {
+            if (@mkdir($dir, 0775, true) === false) {
                 throw new FileStorageException("unable to create directory");
             }
         }
     }
-
 }

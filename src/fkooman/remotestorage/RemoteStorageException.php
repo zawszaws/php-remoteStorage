@@ -4,11 +4,11 @@ namespace fkooman\remotestorage;
 
 class RemoteStorageException extends \Exception
 {
-    private $_description;
+    private $description;
 
     public function __construct($message, $description, $code = 0, Exception $previous = null)
     {
-        $this->_description = $description;
+        $this->description = $description;
         parent::__construct($message, $code, $previous);
     }
 
@@ -17,7 +17,7 @@ class RemoteStorageException extends \Exception
         return $this->_description;
     }
 
-    public function getResponseCode()
+    public function getStatusCode()
     {
         switch ($this->message) {
             case "not_found":
@@ -34,16 +34,4 @@ class RemoteStorageException extends \Exception
                 return 400;
         }
     }
-
-    public function getLogMessage($includeTrace = FALSE)
-    {
-        $msg = 'Message    : ' . $this->getMessage() . PHP_EOL .
-               'Description: ' . $this->getDescription() . PHP_EOL;
-        if ($includeTrace) {
-            $msg .= 'Trace      : ' . PHP_EOL . $this->getTraceAsString() . PHP_EOL;
-        }
-
-        return $msg;
-    }
-
 }

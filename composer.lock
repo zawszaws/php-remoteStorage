@@ -3,7 +3,7 @@
         "This file locks the dependencies of your project to a known state",
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file"
     ],
-    "hash": "af1f6819c28849be39d2e9d089d440ea",
+    "hash": "9ceb0c7cce458f06d1c547bc9317e5bc",
     "packages": [
         {
             "name": "fkooman/php-lib-config",
@@ -118,43 +118,6 @@
             ],
             "description": "Library for implementing OAuth 2.0 resource servers",
             "time": "2013-08-21 14:08:17"
-        },
-        {
-            "name": "fkooman/php-rest-service",
-            "version": "0.9.3",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/fkooman/php-rest-service.git",
-                "reference": "0.9.3"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/fkooman/php-rest-service/zipball/0.9.3",
-                "reference": "0.9.3",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=5.3.0"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-0": {
-                    "RestService\\": "lib/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "Apache-2.0"
-            ],
-            "authors": [
-                {
-                    "name": "François Kooman",
-                    "email": "fkooman@tuxed.net",
-                    "role": "Developer"
-                }
-            ],
-            "description": "PHP library to develop REST applications",
-            "time": "2013-06-12 13:51:56"
         },
         {
             "name": "guzzle/guzzle",

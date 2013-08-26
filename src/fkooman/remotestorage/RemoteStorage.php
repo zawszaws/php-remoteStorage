@@ -2,214 +2,83 @@
 
 namespace fkooman\remotestorage;
 
-use fkooman\Config\Config;
-use RestService\Http\HttpRequest;
-use RestService\Http\HttpResponse;
+use fkooman\oauth\rs\TokenIntrospection;
 
-use fkooman\oauth\rs\ResourceServer;
-use fkooman\oauth\rs\ResourceServerException;
-
-use Guzzle\Http\Client;
-
+/**
+ * Validate the path Request with the actual OAuth authorization information
+ * And request stuff from the File backend if validate matches
+ */
 class RemoteStorage
 {
-    private $config;
-    private $rs;
-    private $fs;
+    private $storageBackend;
+    private $tokenIntrospection;
 
-    public function __construct(Config $c, Client $client)
+    public function __construct(StorageInterface $storageBackend, TokenIntrospection $tokenIntrospection = null)
     {
-        $this->config = $c;
-        $this->rs = new ResourceServer($client);
-        $this->fs = new FileStorage($this->config);
+        $this->storageBackend = $storageBackend;
+        $this->tokenIntrospection = $tokenIntrospection;
     }
 
-    public function handleRequest(HttpRequest $request)
+    public function getDir($dirPath)
     {
-        $response = new HttpResponse(200, "application/json");
-        $response->setHeader("Access-Control-Allow-Origin", "*");
+        // always require the user to match the directory
+        $p = new PathParser($dirPath);
+        if ($p->getUserId() !== $this->tokenIntrospection->getSub()) {
+            throw new RemoteStorageException("forbidden", "directory does not belong to user");
+        }
+        $moduleName = $p->getModuleName();
 
-        $service = $this->fs; // FIXME: can this be avoided??
-        $rs = $this->rs; // FIXME: can this be avoided??
-        $config = $this->config; // FIXME: can this be avoided??
+        // always require the scope to match
+        $this->requireAnyScope($this->tokenIntrospection->getScope(), array("$moduleName:r", "$moduleName:rw", "root:r", "root:rw"));
 
-        try {
-            $request->matchRest("OPTIONS", null, function() use ($response) {
-                $response->setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, Origin");
-                $response->setHeader("Access-Control-Allow-Methods", "GET, PUT, DELETE");
-            });
+        return $this->storageBackend->getDir($dirPath);
+    }
 
-            ################
-            # PUBLIC FILES #
-            ################
+    public function getFile($filePath)
+    {
+        // only require the user to match the directory when not public
+        $p = new PathParser($filePath);
+        if (!$p->getIsPublic()) {
+            if ($p->getUserId() !== $this->tokenIntrospection->getSub()) {
+                throw new RemoteStorageException("forbidden", "directory does not belong to user");
+            }
+            $moduleName = $p->getModuleName();
 
-            // get a file
-            $request->matchRest("GET", "/:user/public/:module/:path+", function($user, $module, $path) use ($rs, $request, &$response, $service, $config) {
-                // no auth required
-                $filePath = $service->getFile($request->getPathInfo(), $contentType);
-                if (false === $filePath) {
-                    throw new RemoteStorageException("not_found", "file not found");
-                }
-                $response->setContentType($contentType);
-                $response->setContentFile($filePath);
-                if ($config->getValue('useXSendfile')) {
-                    $response->useXSendfile(true);
-                }
-            });
-
-            // get a directory listing
-            $request->matchRest("GET", "/:user/public/:module(/:path+)/", function($user, $module, $path = null) use ($rs, $request, &$response, $service) {
-                // auth required
-                $introspect = $rs->verifyRequest($request->getHeader("Authorization"), $request->getQueryParameter("access_token"));
-                if ($user !== $introspect->getSub()) {
-                    throw new RemoteStorageException("forbidden", "authorized user does not match user in path");
-                }
-                $this->requireAnyScope($introspect->getScope(), array("$module:r", "$module:rw", "root:r", "root:rw"));
-
-                $content = $service->getDir($request->getPathInfo());
-                if (false === $content) {
-                    throw new RemoteStorageException("not_found", "directory not found");
-                }
-                $response->setContent(json_encode($content, JSON_FORCE_OBJECT));
-            });
-
-            // upload/update a file
-            $request->matchRest("PUT", "/:user/public/:module/:path+", function($user, $module, $path) use ($rs, $request, &$response, $service) {
-                // auth required
-                $introspect = $rs->verifyRequest($request->getHeader("Authorization"), $request->getQueryParameter("access_token"));
-                if ($user !== $introspect->getSub()) {
-                    throw new RemoteStorageException("forbidden", "authorized user does not match user in path");
-                }
-                $this->requireAnyScope($introspect->getScope(), array("$module:rw", "root:rw"));
-
-                // FIXME: deal with Content-Type
-                $result = $service->putFile($request->getPathInfo(), $request->getContent(), $request->getContentType());
-                if (false === $result) {
-                    throw new RemoteStorageException("invalid_request", "unable to store file");
-                }
-            });
-
-            // delete a file
-            $request->matchRest("DELETE", "/:user/public/:module/:path+", function($user, $module, $path) use ($rs, $request, &$response, $service) {
-                // auth required
-                $introspect = $rs->verifyRequest($request->getHeader("Authorization"), $request->getQueryParameter("access_token"));
-                if ($user !== $introspect->getSub()) {
-                    throw new RemoteStorageException("forbidden", "authorized user does not match user in path");
-                }
-                $this->requireAnyScope($introspect->getScope(), array("$module:rw", "root:rw"));
-
-                $result = $service->deleteFile($request->getPathInfo());
-                if (false === $result) {
-                    throw new RemoteStorageException("not_found", "file not found");
-                }
-            });
-
-            ####################
-            # NON PUBLIC FILES #
-            ####################
-
-            // FIXME: we have to watch out for the "public" module, if some file was requested not
-            // matching above, like for instance /user/public/hello.txt which contains no
-            // module, it matches below here with module "public" and file "hello.txt". BAD.
-
-            // get a file
-            $request->matchRest("GET", "/:user/:module/:path+", function($user, $module, $path) use ($rs, $request, &$response, $service, $config) {
-                // auth required
-                $introspect = $rs->verifyRequest($request->getHeader("Authorization"), $request->getQueryParameter("access_token"));
-                if ($user !== $introspect->getSub()) {
-                    throw new RemoteStorageException("forbidden", "authorized user does not match user in path");
-                }
-                $this->requireAnyScope($introspect->getScope(), array("$module:r", "$module:rw", "root:r", "root:rw"));
-
-                $filePath = $service->getFile($request->getPathInfo(), $contentType);
-                if (false === $filePath) {
-                    throw new RemoteStorageException("not_found", "file not found");
-                }
-                $response->setContentType($contentType);
-                $response->setContentFile($filePath);
-                if ($config->getValue('useXSendfile')) {
-                    $response->useXSendfile(true);
-                }
-            });
-
-            // get a directory listing
-            $request->matchRest("GET", "/:user/:module(/:path+)/", function($user, $module, $path = null) use ($rs, $request, &$response, $service) {
-                // auth required
-                $introspect = $rs->verifyRequest($request->getHeader("Authorization"), $request->getQueryParameter("access_token"));
-                if ($user !== $introspect->getSub()) {
-                    throw new RemoteStorageException("forbidden", "authorized user does not match user in path");
-                }
-                $this->requireAnyScope($introspect->getScope(), array("$module:r", "$module:rw", "root:r", "root:rw"));
-
-                $content = $service->getDir($request->getPathInfo());
-                if (false === $content) {
-                    throw new RemoteStorageException("not_found", "directory not found");
-                }
-                $response->setContent(json_encode($content, JSON_FORCE_OBJECT));
-            });
-
-            // upload/update a file
-            $request->matchRest("PUT", "/:user/:module/:path+", function($user, $module, $path) use ($rs, $request, &$response, $service) {
-                // auth required
-                $introspect = $rs->verifyRequest($request->getHeader("Authorization"), $request->getQueryParameter("access_token"));
-                if ($user !== $introspect->getSub()) {
-                    throw new RemoteStorageException("forbidden", "authorized user does not match user in path");
-                }
-                $this->requireAnyScope($introspect->getScope(), array("$module:rw", "root:rw"));
-
-                // FIXME: deal with Content-Type
-                $result = $service->putFile($request->getPathInfo(), $request->getContent(), $request->getContentType());
-                if (false === $result) {
-                    throw new RemoteStorageException("invalid_request", "unable to store file");
-                }
-            });
-
-            // delete a file
-            $request->matchRest("DELETE", "/:user/:module/:path+", function($user, $module, $path) use ($rs, $request, &$response, $service) {
-                // auth required
-                $introspect = $rs->verifyRequest($request->getHeader("Authorization"), $request->getQueryParameter("access_token"));
-                if ($user !== $introspect->getSub()) {
-                    throw new RemoteStorageException("forbidden", "authorized user does not match user in path");
-                }
-                $this->requireAnyScope($introspect->getScope(), sarray("$module:rw", "root:rw"));
-
-                $result = $service->deleteFile($request->getPathInfo());
-                if (false === $result) {
-                    throw new RemoteStorageException("not_found", "file not found");
-                }
-            });
-
-            $request->matchRestDefault(function($methodMatch, $patternMatch) use ($request, &$response) {
-                if (in_array($request->getRequestMethod(), $methodMatch)) {
-                    if (!$patternMatch) {
-                        throw new RemoteStorageException("not_found", "resource not found");
-                    }
-                } else {
-                    $response->setResponseCode(405);
-                    $response->setHeader("Allow", implode(", ", $methodMatch));
-                }
-            });
-
-        } catch (RemoteStorageException $e) {
-            $response = new HttpResponse($e->getStatusCode());
-            $response->setHeader("Content-Type", "application/json");
-            $response->setContent(json_encode(array("error" => $e->getMessage(), "error_description" => $e->getDescription())));
-        } catch (ResourceServerException $e) {
-            $e->setRealm($this->config->getSection("OAuth")->getValue("realm"));
-            $response = new HttpResponse($e->getStatusCode());
-            $response->setHeader("WWW-Authenticate", $e->getAuthenticateHeader());
-            $response->setHeader("Content-Type", "application/json");
-            $response->setContent(
-                json_encode(
-                    array(
-                        "error" => $e->getMessage(),
-                        "error_description" => $e->getDescription()
-                    )
-                )
-            );
+            // always require the scope to match
+            $this->requireAnyScope($this->tokenIntrospection->getScope(), array("$moduleName:r", "$moduleName:rw", "root:r", "root:rw"));
         }
 
-        return $response;
+        return $this->storageBackend->getFile($filePath);
+    }
+
+    public function putFile($filePath, $fileContent, $fileMimeType)
+    {
+        // always require the user to match the directory
+        $p = new PathParser($filePath);
+        if ($p->getUserId() !== $this->tokenIntrospection->getSub()) {
+            throw new RemoteStorageException("forbidden", "directory does not belong to user");
+        }
+        $moduleName = $p->getModuleName();
+
+        // always require the scope to match
+        $this->requireAnyScope($this->tokenIntrospection->getScope(), array("$moduleName:rw", "root:rw"));
+
+        return $this->storageBackend->putFile($filePath, $fileContent, $fileMimeType);
+    }
+
+    public function deleteFile($filePath)
+    {
+        // always require the user to match the directory
+        $p = new PathParser($filePath);
+        if ($p->getUserId() !== $this->tokenIntrospection->getSub()) {
+            throw new RemoteStorageException("forbidden", "directory does not belong to user");
+        }
+        $moduleName = $p->getModuleName();
+
+        // always require the scope to match
+        $this->requireAnyScope($this->tokenIntrospection->getScope(), array("$moduleName:rw", "root:rw"));
+
+        return $this->storageBackend->deleteFile($filePath);
     }
 
     /**
@@ -224,6 +93,6 @@ class RemoteStorage
                 return;
             }
         }
-        throw new ResourceServerException("insufficient_scope", "no permission for this call with granted scope");
+        throw new RemoteStorageException("insufficient_scope", "no permission for this call with granted scope");
     }
 }

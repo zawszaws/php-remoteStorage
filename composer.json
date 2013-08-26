@@ -10,6 +10,7 @@
     "require": {
         "fkooman/php-lib-config": "0.2.*",
         "fkooman/php-oauth-lib-rs": "0.3.*",
-        "fkooman/php-rest-service": "0.9.*"
+        "fkooman/php-rest-service": "0.9.*",
+	"silex/silex": "1.1.*"
     }
 }

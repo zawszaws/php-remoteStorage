@@ -2,143 +2,105 @@
 
 namespace fkooman\remotestorage;
 
-use fkooman\Config\Config;
-
-class FileStorage
+class FileStorage implements StorageInterface
 {
-    private $config;
+    /** @var MimeHandlerInterface */
+    private $mimeHandler;
 
-    public function __construct(Config $c)
+    /** @var string */
+    private $baseDirectory;
+
+    public function __construct(MimeHandlerInterface $mimeHandler, $baseDirectory)
     {
-        $this->config = $c;
+        $this->mimeHandler = $mimeHandler;
+        $this->baseDirectory = $baseDirectory;
     }
 
-    /**
-     * Get the directory contents
-     *
-     * @param string $path the relative path from the API root to the directory,
-     *                     ending with a "/"
-     * @return array an array with all files in the directory as key and
-     *                     the last modified time as value, empty when
-     *                     directory does not exist or contains no files
-     */
-    public function getDir($path)
+    public function getDir($dirPath)
     {
-        if (strrpos($path, "/") !== strlen($path) - 1) {
+        $dirPath = $this->baseDirectory . $dirPath;
+        $currentDirectory = getcwd();
+        if (false === @chdir($dirPath)) {
             return false;
         }
-        $entries = array();
-        $dir = realpath($this->config->getValue('filesDirectory') . $path);
-        if (false !== $dir && is_dir($dir)) {
-            $cwd = getcwd();
-            if (false === @chdir($dir)) {
-                // could not enter directory
+        $dirList = array();
+        foreach (glob("*", GLOB_MARK) as $entry) {
+            $dirList[$entry] = new Entity($this->getEntityTag($dirPath . "/" . $entry));
+        }
+        // the chdir below MUST always work...
+        @chdir($currentDirectory);
+
+        return new Directory($this->getEntityTag($dirPath), $dirList);
+
+        return $dirList;
+    }
+
+    public function getFile($filePath)
+    {
+        $filePath = $this->baseDirectory . $filePath;
+
+        if (is_dir($filePath)) {
+            return false;
+        }
+        $fileContent = @file_get_contents($filePath);
+        if (false === $fileContent) {
+            return false;
+        }
+
+        $mimeType = $this->mimeHandler->getMimeType($filePath);
+        $entityTag = $this->getEntityTag($filePath);
+
+        return new File($entityTag, $fileContent, $mimeType);
+    }
+
+    public function putFile($filePath, $fileData, $mimeType)
+    {
+        $filePath = $this->baseDirectory . $filePath;
+
+        if (false === @file_put_contents($filePath, $fileData)) {
+            if (false === $this->createDirectory(dirname($filePath))) {
                 return false;
             }
-            foreach (glob("*", GLOB_MARK) as $e) {
-                $entries[$e] = filemtime($e);
-            }
-            chdir($cwd);
-        }
-
-        return $entries;
-    }
-
-    /**
-     * Get a specific file
-     *
-     * @param string $path the relative path from the API root to the
-     *                              file, not ending with a "/"
-     * @return mixed the full file path on success, or false when
-     *                              the file does not exist
-     * @throws FileStorageException if the file could not be read
-     */
-    public function getFile($path, &$mimeType)
-    {
-        if (strrpos($path, "/") === strlen($path) - 1) {
-            return false;
-        }
-        $filePath = realpath($this->config->getValue('filesDirectory') . $path);
-        if (false === $filePath || !is_file($filePath)) {
-            return false;
-        }
-
-        $m = new MimeHandler($this->config);
-        $mimeType = $m->getMimeType($filePath);
-
-        return $filePath;
-    }
-
-    /**
-     * Store a file
-     *
-     * @param string $path the relative path from the API root to the
-     *                              file, not ending with a "/"
-     * @param  string               $fileData the contents of the file to be written
-     * @return boolean              true on success, false on failure
-     * @throws FileStorageException if a directory needs to be created for
-     *                              holding this file and that fails
-     */
-    public function putFile($path, $fileData, $mimeType)
-    {
-        if (strrpos($path, "/") === strlen($path) - 1) {
-            return false;
-        }
-        $file = $this->config->getValue('filesDirectory') . $path;
-        $directory = dirname($file);
-        $dir = realpath($directory);
-        if (false === $dir) {
-            $this->createDirectory($directory);
-            $dir = realpath($directory);
-            if (false === $dir) {
-                throw new FileStorageException("unable to create directory");
+            if (false === @file_put_contents($filePath, $fileData)) {
+                return false;
             }
         }
-        if (!is_dir($dir)) {
-            // parent of file already exists and is not a directory
-            return false;
-        }
 
-        $result = file_put_contents($file, $fileData);
-
-        $m = new MimeHandler($this->config);
-        $m->setMimeType($file, $mimeType);
-
-        return false !== $result;
-    }
-
-    /**
-     * Delete a file
-     *
-     * @param string $path the relative path from the API root to the
-     *                              file, not ending with a "/"
-     * @return boolean              true on success, false on failure
-     * @throws FileStorageException if the file could not be deleted, even
-     *                              though it exists
-     */
-    public function deleteFile($path)
-    {
-        if (strrpos($path, "/") === strlen($path) - 1) {
-            return false;
-        }
-        $file = realpath($this->config->getValue('filesDirectory') . $path);
-        if (false === $file || !is_file($file)) {
-            return false;
-        }
-
-        if (@unlink($file) === false) {
-            throw new FileStorageException("unable to delete file");
-        }
+        $this->mimeHandler->setMimeType($filePath, $mimeType);
 
         return true;
     }
 
-    private function createDirectory($dir)
+    public function deleteFile($filePath)
     {
-        if (!file_exists($dir)) {
-            if (@mkdir($dir, 0775, true) === false) {
-                throw new FileStorageException("unable to create directory");
-            }
-        }
+        // FIXME: if directory is now empty, the dir should also be removed
+
+        $filePath = $this->baseDirectory . $filePath;
+
+        return @unlink($filePath);
     }
+
+    private function createDirectory($dirPath)
+    {
+        return @mkdir($dirPath, 0775, true);
+    }
+
+    private function getEntityTag($entityPath)
+    {
+        return filemtime($entityPath);
+    }
+
+    private function validatePath($entityPath)
+    {
+        $realPath = realpath($this->baseDirectory . $filePath);
+        if (false === $realPath || !is_string($realPath) || 0 >= strlen($realPath)) {
+            throw new FileStorageException("invalid path");
+        }
+        if (0 !== strpos($realPath, $this->baseDirectory)) {
+            throw new FileStorageException("path outside base directory");
+        }
+
+        return $realPath;
+    }
+
 }

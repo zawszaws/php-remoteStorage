@@ -3,98 +3,99 @@
 require_once 'vendor/autoload.php';
 
 use fkooman\remotestorage\FileStorage;
-use fkooman\Config\Config;
+use fkooman\remotestorage\NullMimeHandler;
+use fkooman\remotestorage\Entity;
 
 class FileStorageTest extends PHPUnit_Framework_TestCase
 {
-    private $_tmpDir;
-    private $_c;
+    private $fileStorage;
+    private $baseDirectory;
 
     public function setUp()
     {
-        $this->_tmpDir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . "remoteStorage_" . rand();
-        mkdir($this->_tmpDir);
+        $this->baseDirectory = sys_get_temp_dir() . DIRECTORY_SEPARATOR . "remoteStorage_" . rand();
+        $this->fileStorage = new FileStorage(new NullMimeHandler(), $this->baseDirectory);
 
-        // load default config
-        $this->_c = Config::fromIniFile(dirname(dirname(dirname(__DIR__))) . DIRECTORY_SEPARATOR . "config" . DIRECTORY_SEPARATOR . "remoteStorage.ini.defaults");
+        $this->fileStorage->putFile("/foo.txt", "Hello World!", "text/plain");
+        touch($this->baseDirectory . "/foo.txt", 12345);
 
-        $configData = $this->_c->toArray();
+        $this->fileStorage->putFile("/bar/foobar.txt", "Hello World!", "text/plain");
+        touch($this->baseDirectory . "/bar/foobar.txt", 54321);
+        touch($this->baseDirectory . "/bar", 11111);
+    }
 
-        // override DB config in memory only
-        $configData["filesDirectory"] = $this->_tmpDir;
-        $this->_c = new Config($configData);
+    public function testGetDir()
+    {
+        $this->assertEquals(
+            array(
+                "bar/" => new Entity(11111),
+                "foo.txt" => new Entity(12345)
+            ),
+            $this->fileStorage->getDir("/")->getDirectoryList()
+        );
+        $this->assertEquals(
+            array(
+                "foobar.txt" => new Entity(54321)
+            ),
+            $this->fileStorage->getDir("/bar/")->getDirectoryList()
+        );
+
+    }
+
+    public function testGetFile()
+    {
+        $this->assertEquals("Hello World!", $this->fileStorage->getFile("/foo.txt")->getFileContent());
+        $this->assertEquals("text/plain", $this->fileStorage->getFile("/foo.txt")->getMimeType());
+    }
+
+    public function testPutFile()
+    {
+        $this->assertTrue($this->fileStorage->putFile("/hello.json", '{"hello": "world"}', "application/json"));
+    }
+
+    public function testDeleteFile()
+    {
+        $this->assertTrue($this->fileStorage->deleteFile("/foo.txt"));
+    }
+
+    public function testGetDirOnFile()
+    {
+        // FIXME: expected behavior? throw exception?
+        $this->assertFalse($this->fileStorage->getDir("/foo.txt"));
+    }
+
+    public function testGetFileOnDir()
+    {
+        // FIXME: expected behavior? throw exception?
+        $this->assertFalse($this->fileStorage->getFile("/"));
+    }
+
+    public function testGetFileOnNonExistingFile()
+    {
+        // FIXME: expected behavior? throw exception?
+        $this->assertFalse($this->fileStorage->getFile("/not-there.txt"));
+    }
+
+    public function testGetDirOnNonExistingDir()
+    {
+        // FIXME: expected behavior? throw exception?
+        $this->assertFalse($this->fileStorage->getFile("/dir/not/there/"));
     }
 
     public function tearDown()
     {
-        $this->_rrmdir($this->_tmpDir);
+        $this->recursiveDelete($this->baseDirectory);
     }
 
-    public function testUploadAndGetFile()
+    private function recursiveDelete($dirPath)
     {
-        $f = new FileStorage($this->_c);
-        $this->assertTrue($f->putFile("/foo/bar/demo.txt", "Hello World", "text/plain"));
-        $this->assertTrue($f->putFile("/foo/bar/test.json", "[]", "application/json"));
-        $this->assertTrue($f->putFile("/foo/bar/foobar/foobaz/test.html", "<html></html>", "text/html"));
-
-        $filePath = $f->getFile("/foo/bar/demo.txt", $mimeType);
-        $this->assertEquals("Hello World", file_get_contents($filePath));
-        $this->assertEquals("text/plain", $mimeType);
-
-        $filePath = $f->getFile("/foo/bar/test.json", $mimeType);
-        $this->assertEquals("[]", file_get_contents($filePath));
-        $this->assertEquals("application/json", $mimeType);
-
-        $filePath = $f->getFile("/foo/bar/foobar/foobaz/test.html", $mimeType);
-        $this->assertEquals("<html></html>", file_get_contents($filePath));
-        $this->assertEquals("text/html", $mimeType);
-
-        // FIXME: the time is only correct if the test runs fast enough...
-        $this->assertEquals(array("demo.txt" => time(), "test.json" => time(), "foobar/" => time()), $f->getDir("/foo/bar/"));
-        $this->assertEquals(array("test.html" => time()), $f->getDir("/foo/bar/foobar/foobaz/"));
-
-        $this->assertTrue($f->deleteFile("/foo/bar/demo.txt"));
-        $this->assertTrue($f->deleteFile("/foo/bar/test.json"));
-        $this->assertTrue($f->deleteFile("/foo/bar/foobar/foobaz/test.html"));
-
-    }
-
-    public function testGetDirListOnFile()
-    {
-        $f = new FileStorage($this->_c);
-        $this->assertFalse($f->getDir("/foo/bar/demo.txt"));
-    }
-
-    public function testFileFromDir()
-    {
-        $f = new FileStorage($this->_c);
-        $this->assertTrue($f->putFile("/foo/bar/demo.txt", "Hello World", "text/plain"));
-        $this->assertFalse($f->getFile("/foo/bar/", $mimeType));
-    }
-
-    public function testDeleteDir()
-    {
-        $f = new FileStorage($this->_c);
-        $this->assertTrue($f->putFile("/foo/bar/demo.txt", "Hello World", "text/plain"));
-        $this->assertFalse($f->deleteFile("/foo/bar/"));
-    }
-
-    public function testPutDir()
-    {
-        $f = new FileStorage($this->_c);
-        $this->assertFalse($f->putFile("/foo/bar/demo.txt/", "Hello World", "text/plain"));
-    }
-
-    private function _rrmdir($dir)
-    {
-        foreach (glob($dir . '/*') as $file) {
+        foreach (glob($dirPath . '/*') as $file) {
             if (is_dir($file)) {
-                $this->_rrmdir($file);
+                $this->recursiveDelete($file);
             } else {
                 unlink($file);
             }
         }
-        rmdir($dir);
+        rmdir($dirPath);
     }
-
 }

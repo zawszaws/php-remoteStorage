@@ -4,6 +4,7 @@ require_once 'vendor/autoload.php';
 
 use fkooman\remotestorage\RemoteStorage;
 use fkooman\remotestorage\DummyStorage;
+use fkooman\remotestorage\PathParser;
 
 use fkooman\oauth\rs\TokenIntrospection;
 
@@ -25,21 +26,21 @@ class RemoteStorageTest extends PHPUnit_Framework_TestCase
 
     public function testGetFile()
     {
-        $this->remoteStorage->getFile("/admin/foo/bar.txt");
+        $this->remoteStorage->getFile(new PathParser("/admin/foo/bar.txt"));
     }
 
     public function testPutFile()
     {
-        $this->remoteStorage->putFile("/admin/bar/foo.txt", "Hello World!", "text/plain");
+        $this->remoteStorage->putFile(new PathParser("/admin/bar/foo.txt"), "Hello World!", "text/plain");
     }
 
     public function testGetDir()
     {
-        $this->remoteStorage->getDir("/admin/foo/");
+        $this->remoteStorage->getDir(new PathParser("/admin/foo/"));
     }
 
     public function testDeleteFile()
     {
-        $this->remoteStorage->deleteFile("/admin/bar/bar.txt");
+        $this->remoteStorage->deleteFile(new PathParser("/admin/bar/bar.txt"));
     }
 }

@@ -8,6 +8,7 @@ class PathParser
     private $isPublic;
     private $moduleName;
     private $isDirectory;
+    private $entityPath;
 
     public function __construct($entityPath)
     {
@@ -46,6 +47,7 @@ class PathParser
         $this->isPublic = "public" === $entityParts[2];
         $this->moduleName = ($this->isPublic) ? $entityParts[3] : $entityParts[2];
         $this->isDirectory = empty($entityParts[count($entityParts)-1]);
+        $this->entityPath = $entityPath;
     }
 
     public function getUserId()
@@ -66,5 +68,15 @@ class PathParser
     public function getIsDirectory()
     {
         return $this->isDirectory;
+    }
+
+    public function getIsFile()
+    {
+        return !$this->isDirectory;
+    }
+
+    public function getEntityPath()
+    {
+        return $this->entityPath;
     }
 }

@@ -19,66 +19,54 @@ class RemoteStorage
         $this->tokenIntrospection = $tokenIntrospection;
     }
 
-    public function getDir($dirPath)
+    public function getDir(PathParser $pathParser)
     {
-        // always require the user to match the directory
-        $p = new PathParser($dirPath);
-        if ($p->getUserId() !== $this->tokenIntrospection->getSub()) {
-            throw new RemoteStorageException("forbidden", "directory does not belong to user");
-        }
-        $moduleName = $p->getModuleName();
+        $this->requireAuthz($pathParser, array("r", "rw"));
 
-        // always require the scope to match
-        $this->requireAnyScope($this->tokenIntrospection->getScope(), array("$moduleName:r", "$moduleName:rw", "root:r", "root:rw"));
-
-        return $this->storageBackend->getDir($dirPath);
+        return $this->storageBackend->getDir($pathParser->getEntityPath());
     }
 
-    public function getFile($filePath)
+    public function getFile(PathParser $pathParser)
     {
         // only require the user to match the directory when not public
-        $p = new PathParser($filePath);
-        if (!$p->getIsPublic()) {
-            if ($p->getUserId() !== $this->tokenIntrospection->getSub()) {
-                throw new RemoteStorageException("forbidden", "directory does not belong to user");
-            }
-            $moduleName = $p->getModuleName();
-
-            // always require the scope to match
-            $this->requireAnyScope($this->tokenIntrospection->getScope(), array("$moduleName:r", "$moduleName:rw", "root:r", "root:rw"));
+        if (!$pathParser->getIsPublic()) {
+            $this->requireAuthz($pathParser, array("r", "rw"));
         }
 
-        return $this->storageBackend->getFile($filePath);
+        return $this->storageBackend->getFile($pathParser->getEntityPath());
     }
 
-    public function putFile($filePath, $fileContent, $fileMimeType)
+    public function putFile(PathParser $pathParser, $fileContent, $fileMimeType)
     {
         // always require the user to match the directory
-        $p = new PathParser($filePath);
-        if ($p->getUserId() !== $this->tokenIntrospection->getSub()) {
-            throw new RemoteStorageException("forbidden", "directory does not belong to user");
-        }
-        $moduleName = $p->getModuleName();
+        $this->requireAuthz($pathParser, array("rw"));
 
-        // always require the scope to match
-        $this->requireAnyScope($this->tokenIntrospection->getScope(), array("$moduleName:rw", "root:rw"));
-
-        return $this->storageBackend->putFile($filePath, $fileContent, $fileMimeType);
+        return $this->storageBackend->putFile($pathParser->getEntityPath(), $fileContent, $fileMimeType);
     }
 
-    public function deleteFile($filePath)
+    public function deleteFile(PathParser $pathParser)
     {
         // always require the user to match the directory
-        $p = new PathParser($filePath);
-        if ($p->getUserId() !== $this->tokenIntrospection->getSub()) {
+        $this->requireAuthz($pathParser, array("rw"));
+
+        return $this->storageBackend->deleteFile($pathParser->getEntityPath());
+    }
+
+    private function requireAuthz(PathParser $pathParser, array $scopes)
+    {
+        // always require the user to match the directory
+        if ($pathParser->getUserId() !== $this->tokenIntrospection->getSub()) {
             throw new RemoteStorageException("forbidden", "directory does not belong to user");
         }
-        $moduleName = $p->getModuleName();
+        $moduleName = $pathParser->getModuleName();
 
+        $specificScopes = array();
+        foreach ($scopes as $s) {
+            $specificScopes[] = sprintf("%s:%s", $moduleName, $s);
+            $specificScopes[] = sprintf("root:%s", $s);
+        }
         // always require the scope to match
-        $this->requireAnyScope($this->tokenIntrospection->getScope(), array("$moduleName:rw", "root:rw"));
-
-        return $this->storageBackend->deleteFile($filePath);
+        $this->requireAnyScope($this->tokenIntrospection->getScope(), $specificScopes);
     }
 
     /**

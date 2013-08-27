@@ -1,6 +1,6 @@
 <?php
 
-namespace fkooman\remotestorage;
+namespace fkooman\RemoteStorage;
 
 use fkooman\oauth\rs\TokenIntrospection;
 

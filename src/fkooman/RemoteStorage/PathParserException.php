@@ -1,6 +1,6 @@
 <?php
 
-namespace fkooman\remotestorage;
+namespace fkooman\RemoteStorage;
 
 class PathParserException extends \Exception
 {

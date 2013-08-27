@@ -1,6 +1,6 @@
 <?php
 
-namespace fkooman\remotestorage;
+namespace fkooman\RemoteStorage;
 
 class DummyStorage implements StorageInterface
 {

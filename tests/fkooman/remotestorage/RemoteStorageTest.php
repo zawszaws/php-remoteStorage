@@ -2,9 +2,9 @@
 
 require_once 'vendor/autoload.php';
 
-use fkooman\remotestorage\RemoteStorage;
-use fkooman\remotestorage\DummyStorage;
-use fkooman\remotestorage\PathParser;
+use fkooman\RemoteStorage\RemoteStorage;
+use fkooman\RemoteStorage\DummyStorage;
+use fkooman\RemoteStorage\PathParser;
 
 use fkooman\oauth\rs\TokenIntrospection;
 

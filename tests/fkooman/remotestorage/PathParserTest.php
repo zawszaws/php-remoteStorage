@@ -2,8 +2,8 @@
 
 require_once 'vendor/autoload.php';
 
-use fkooman\remotestorage\PathParser;
-use fkooman\remotestorage\PathParserException;
+use fkooman\RemoteStorage\PathParser;
+use fkooman\RemoteStorage\PathParserException;
 
 class PathParserTest extends PHPUnit_Framework_TestCase
 {

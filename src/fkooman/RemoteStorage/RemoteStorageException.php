@@ -22,14 +22,10 @@ class RemoteStorageException extends \Exception
         switch ($this->message) {
             case "not_found":
                 return 404;
-            case "invalid_request":
-                return 400;
+            case "not_authorized":
+                return 401;
             case "forbidden":
                 return 403;
-            case "method_not_allowed":
-                return 405;
-            case "internal_server_error":
-                return 500;
             default:
                 return 400;
         }

@@ -21,7 +21,7 @@ class RemoteStorage
 
     public function getDir(PathParser $pathParser)
     {
-        $this->requireAuthz($pathParser, array("r", "rw"));
+        $this->requireAuthorization($pathParser, array("r", "rw"));
 
         return $this->storageBackend->getDir($pathParser->getEntityPath());
     }
@@ -30,7 +30,7 @@ class RemoteStorage
     {
         // only require the user to match the directory when not public
         if (!$pathParser->getIsPublic()) {
-            $this->requireAuthz($pathParser, array("r", "rw"));
+            $this->requireAuthorization($pathParser, array("r", "rw"));
         }
 
         return $this->storageBackend->getFile($pathParser->getEntityPath());
@@ -39,7 +39,7 @@ class RemoteStorage
     public function putFile(PathParser $pathParser, $fileContent, $fileMimeType)
     {
         // always require the user to match the directory
-        $this->requireAuthz($pathParser, array("rw"));
+        $this->requireAuthorization($pathParser, array("rw"));
 
         return $this->storageBackend->putFile($pathParser->getEntityPath(), $fileContent, $fileMimeType);
     }
@@ -47,16 +47,16 @@ class RemoteStorage
     public function deleteFile(PathParser $pathParser)
     {
         // always require the user to match the directory
-        $this->requireAuthz($pathParser, array("rw"));
+        $this->requireAuthorization($pathParser, array("rw"));
 
         return $this->storageBackend->deleteFile($pathParser->getEntityPath());
     }
 
-    private function requireAuthz(PathParser $pathParser, array $scopes)
+    private function requireAuthorization(PathParser $pathParser, array $scopes)
     {
         // always require the user to match the directory
         if ($pathParser->getUserId() !== $this->tokenIntrospection->getSub()) {
-            throw new RemoteStorageException("forbidden", "directory does not belong to user");
+            throw new RemoteStorageException("forbidden", "path needs to be owned by user making the request");
         }
         $moduleName = $pathParser->getModuleName();
 

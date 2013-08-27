@@ -12,8 +12,6 @@ class PathParser
 
     public function __construct($entityPath)
     {
-//        $pathRegularExpression = '^/[a-zA-Z0-9%.-_]+/(?:(?:public/)|(?!public)[a-zA-Z0-9%.-_]+/)[a-zA-Z0-9%.-_]+/(?:[a-zA-Z0-9%.-_]+/)*(?:[a-zA-Z0-9%.-_]+)*$';
-
         if (0 !== strpos($entityPath, "/")) {
             throw new PathParserException("path MUST start with a '/'");
         }

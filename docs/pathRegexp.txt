@@ -1,0 +1,4 @@
+// ^/[a-zA-Z0-9%.-_]+/(?:(?:public/)|(?!public/))(?:[a-zA-Z0-9%.-_]+/)+(?:[a-zA-Z0-9%.-_]+)*$
+
+use http://debuggex.com/
+

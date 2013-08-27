@@ -14,7 +14,7 @@ class RemoteStorageException extends \Exception
 
     public function getDescription()
     {
-        return $this->_description;
+        return $this->description;
     }
 
     public function getStatusCode()

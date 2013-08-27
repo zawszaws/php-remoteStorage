@@ -102,5 +102,4 @@ class FileStorage implements StorageInterface
 
         return $realPath;
     }
-
 }

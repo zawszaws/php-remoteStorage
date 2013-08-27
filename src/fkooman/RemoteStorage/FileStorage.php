@@ -31,8 +31,6 @@ class FileStorage implements StorageInterface
         @chdir($currentDirectory);
 
         return new Directory($this->getEntityTag($dirPath), $dirList);
-
-        return $dirList;
     }
 
     public function getFile($filePath)

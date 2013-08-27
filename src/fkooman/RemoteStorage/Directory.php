@@ -16,4 +16,14 @@ class Directory extends Entity
     {
         return $this->directoryList;
     }
+
+    public function getFlatDirectoryList()
+    {
+        $flatList = array();
+        foreach ($this->directoryList as $k => $v) {
+            $flatList[$k] = $v->getEntityTag();
+        }
+
+        return $flatList;
+    }
 }

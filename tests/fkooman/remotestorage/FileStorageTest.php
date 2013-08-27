@@ -44,7 +44,7 @@ class FileStorageTest extends PHPUnit_Framework_TestCase
 
     public function testGetFile()
     {
-        $this->assertEquals("Hello World!", $this->fileStorage->getFile("/foo.txt")->getFileContent());
+        $this->assertEquals("Hello World!", $this->fileStorage->getFile("/foo.txt")->getContent());
         $this->assertEquals("text/plain", $this->fileStorage->getFile("/foo.txt")->getMimeType());
     }
 

@@ -4,11 +4,11 @@ namespace fkooman\RemoteStorage;
 
 class Entity
 {
-    protected $entityTag;
+    private $entityTag;
 
     public function __construct($entityTag)
     {
-        $this->entityTag = $entityTag;
+        $this->entityTag = strval($entityTag);
     }
 
     public function getEntityTag()

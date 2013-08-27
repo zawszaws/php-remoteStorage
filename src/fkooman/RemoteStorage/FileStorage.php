@@ -21,7 +21,7 @@ class FileStorage implements StorageInterface
         $dirPath = $this->baseDirectory . $dirPath;
         $currentDirectory = getcwd();
         if (false === @chdir($dirPath)) {
-            return false;
+            throw new FileStorageException("unable to change to directory");
         }
         $dirList = array();
         foreach (glob("*", GLOB_MARK) as $entry) {
@@ -38,11 +38,11 @@ class FileStorage implements StorageInterface
         $filePath = $this->baseDirectory . $filePath;
 
         if (is_dir($filePath)) {
-            return false;
+            throw new FileStorageException("path points to directory, not file");
         }
         $fileContent = @file_get_contents($filePath);
         if (false === $fileContent) {
-            return false;
+            throw new FileStorageException("unable to read file");
         }
 
         $mimeType = $this->mimeHandler->getMimeType($filePath);
@@ -57,24 +57,27 @@ class FileStorage implements StorageInterface
 
         if (false === @file_put_contents($filePath, $fileData)) {
             if (false === $this->createDirectory(dirname($filePath))) {
-                return false;
+                throw new FileStorageException("unable to create directory");
             }
             if (false === @file_put_contents($filePath, $fileData)) {
-                return false;
+                throw new FileStorageException("unable to store file");
             }
         }
 
         $this->mimeHandler->setMimeType($filePath, $mimeType);
 
+        // FIXME: should return new entitytag
         return true;
     }
 
     public function deleteFile($filePath)
     {
-        // FIXME: if directory is now empty, the dir should also be removed
+        // FIXME: if directory is now empty, the dir should also be removed,
+        // and all empty parent directories as well...
 
         $filePath = $this->baseDirectory . $filePath;
 
+        // FIXME: probably should also return some ETag stuff
         return @unlink($filePath);
     }
 
@@ -88,6 +91,7 @@ class FileStorage implements StorageInterface
         return filemtime($entityPath);
     }
 
+    /*
     private function validatePath($entityPath)
     {
         $realPath = realpath($this->baseDirectory . $filePath);
@@ -100,4 +104,5 @@ class FileStorage implements StorageInterface
 
         return $realPath;
     }
+    */
 }

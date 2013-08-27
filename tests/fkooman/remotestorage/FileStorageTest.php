@@ -58,28 +58,40 @@ class FileStorageTest extends PHPUnit_Framework_TestCase
         $this->assertTrue($this->fileStorage->deleteFile("/foo.txt"));
     }
 
+    /**
+     * @expectedException fkooman\RemoteStorage\FileStorageException
+     * @expectedExceptionMessage unable to change to directory
+     */
     public function testGetDirOnFile()
     {
-        // FIXME: expected behavior? throw exception?
-        $this->assertFalse($this->fileStorage->getDir("/foo.txt"));
+        $this->fileStorage->getDir("/foo.txt");
     }
 
+    /**
+     * @expectedException fkooman\RemoteStorage\FileStorageException
+     * @expectedExceptionMessage path points to directory, not file
+     */
     public function testGetFileOnDir()
     {
-        // FIXME: expected behavior? throw exception?
-        $this->assertFalse($this->fileStorage->getFile("/"));
+        $this->fileStorage->getFile("/");
     }
 
+    /**
+     * @expectedException fkooman\RemoteStorage\FileStorageException
+     * @expectedExceptionMessage unable to read file
+     */
     public function testGetFileOnNonExistingFile()
     {
-        // FIXME: expected behavior? throw exception?
-        $this->assertFalse($this->fileStorage->getFile("/not-there.txt"));
+        $this->fileStorage->getFile("/not-there.txt");
     }
 
+    /**
+     * @expectedException fkooman\RemoteStorage\FileStorageException
+     * @expectedExceptionMessage unable to change to directory
+     */
     public function testGetDirOnNonExistingDir()
     {
-        // FIXME: expected behavior? throw exception?
-        $this->assertFalse($this->fileStorage->getFile("/dir/not/there/"));
+        $this->fileStorage->getDir("/dir/not/there/");
     }
 
     public function tearDown()

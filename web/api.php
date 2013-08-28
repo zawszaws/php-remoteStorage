@@ -44,16 +44,25 @@ $app->get('/{entityPath}', function (Request $request, $entityPath) use ($resour
 
     $remoteStorage = new RemoteStorage($fileStorage, $tokenIntrospection);
 
+    $ifNonMatch = $request->headers->get("If-None-Match");
+
     $pathParser = new PathParser("/" . $entityPath);
     if ($pathParser->getIsDirectory()) {
         $directory = $remoteStorage->getDir($pathParser);
 
-        return new JsonResponse($directory->getFlatDirectoryList(), 200, array("ETag" => $directory->getEntityTag()));
+        if ($ifNonMatch !== $directory->getEntityTag()) {
+            return new JsonResponse($directory->getFlatDirectoryList(), 200, array("ETag" => $directory->getEntityTag()));
+        }
+
+        return new Response("", 304, array("ETag" => $directory->getEntityTag()));
     }
 
     $file = $remoteStorage->getFile($pathParser);
+    if ($ifNonMatch !== $file->getEntityTag()) {
+        return new Response($file->getContent(), 200, array("ETag" => $file->getEntityTag(), "Content-Type" => $file->getMimeType()));
+    }
 
-    return new Response($file->getContent(), 200, array("ETag" => $file->getEntityTag(), "Content-Type" => $file->getMimeType()));
+    return new Response("", 304, array("ETag" => $file->getEntityTag()));
 
 })->assert('entityPath', '.*');
 

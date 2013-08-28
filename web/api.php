@@ -53,7 +53,7 @@ $app->get('/{entityPath}', function (Request $request, $entityPath) use ($resour
 
     $file = $remoteStorage->getFile($pathParser);
 
-    return new Response($file->getContent(), 200, array("ETag" => $file->getEntityTag()));
+    return new Response($file->getContent(), 200, array("ETag" => $file->getEntityTag(), "Content-Type" => $file->getMimeType()));
 
 })->assert('entityPath', '.*');
 

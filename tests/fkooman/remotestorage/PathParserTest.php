@@ -66,13 +66,13 @@ class PathParserTest extends PHPUnit_Framework_TestCase
             "/admin/public/",
             "/admin/foo",
             "/admin/public/foo",
-            "/admin/foo/bar+txt",
             "///",
             "admin/public/foo.txt"
         );
         foreach ($testPath as $t) {
             try {
                 $p = new PathParser($t);
+                echo $t . PHP_EOL;
                 $this->assertTrue(false);
             } catch (PathParserException $e) {
                 // nop

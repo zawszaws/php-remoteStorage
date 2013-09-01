@@ -12,6 +12,9 @@ class PathParser
 
     public function __construct($entityPath)
     {
+        if (!is_string($entityPath)) {
+            throw new PathParserException("path MUST be a string");
+        }
         if (0 !== strpos($entityPath, "/")) {
             throw new PathParserException("path MUST start with a '/'");
         }
@@ -28,16 +31,10 @@ class PathParser
             }
         }
 
-        // all parts should only consist of allowed characters, the last one is
-        // allowed to be empty as well
+        // path parts cannot be empty, except the last one
         for ($i = 1; $i < $partCount-1; $i++) {
-            if (0 === preg_match('/^[a-zA-Z0-9%.-_]+$/', $entityParts[$i])) {
-                throw new PathParserException("path part contains invalid characters");
-            }
-        }
-        if (!empty($entityParts[$partCount-1])) {
-            if (0 === preg_match('/^[a-zA-Z0-9%.-_]+$/', $entityParts[$partCount-1])) {
-                throw new PathParserException("path part contains invalid characters");
+            if (0 >= strlen($entityParts[$i])) {
+                throw new PathParserException("path part cannot be empty");
             }
         }
 

@@ -3,7 +3,7 @@
         "This file locks the dependencies of your project to a known state",
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file"
     ],
-    "hash": "6b0d13b39c20d34f2f7e09829871e484",
+    "hash": "3d3d828c216505b8a5fdf9a7996c06bb",
     "packages": [
         {
             "name": "fkooman/php-lib-config",
@@ -83,16 +83,16 @@
         },
         {
             "name": "fkooman/php-oauth-lib-rs",
-            "version": "0.3.0",
+            "version": "0.4.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/fkooman/php-oauth-lib-rs.git",
-                "reference": "e384d01662c10ccb472994a68b7836e1b746c6dc"
+                "reference": "73e314b15c4b4920a1e10e903bdac6ba5b4712f7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/fkooman/php-oauth-lib-rs/zipball/e384d01662c10ccb472994a68b7836e1b746c6dc",
-                "reference": "e384d01662c10ccb472994a68b7836e1b746c6dc",
+                "url": "https://api.github.com/repos/fkooman/php-oauth-lib-rs/zipball/73e314b15c4b4920a1e10e903bdac6ba5b4712f7",
+                "reference": "73e314b15c4b4920a1e10e903bdac6ba5b4712f7",
                 "shasum": ""
             },
             "require": {
@@ -117,7 +117,7 @@
                 }
             ],
             "description": "Library for implementing OAuth 2.0 resource servers",
-            "time": "2013-08-21 14:08:17"
+            "time": "2013-08-30 14:18:42"
         },
         {
             "name": "guzzle/guzzle",
@@ -436,7 +436,7 @@
         },
         {
             "name": "symfony/event-dispatcher",
-            "version": "v2.3.3",
+            "version": "v2.3.4",
             "target-dir": "Symfony/Component/EventDispatcher",
             "source": {
                 "type": "git",
@@ -490,17 +490,17 @@
         },
         {
             "name": "symfony/http-foundation",
-            "version": "v2.3.3",
+            "version": "v2.3.4",
             "target-dir": "Symfony/Component/HttpFoundation",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/HttpFoundation.git",
-                "reference": "d14aca0449278b9fc6e5334ff02dedd0d2167085"
+                "reference": "fdf130fe65457aedbc4639a22f4ef9d3be5c002c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/HttpFoundation/zipball/d14aca0449278b9fc6e5334ff02dedd0d2167085",
-                "reference": "d14aca0449278b9fc6e5334ff02dedd0d2167085",
+                "url": "https://api.github.com/repos/symfony/HttpFoundation/zipball/fdf130fe65457aedbc4639a22f4ef9d3be5c002c",
+                "reference": "fdf130fe65457aedbc4639a22f4ef9d3be5c002c",
                 "shasum": ""
             },
             "require": {
@@ -536,21 +536,21 @@
             ],
             "description": "Symfony HttpFoundation Component",
             "homepage": "http://symfony.com",
-            "time": "2013-08-07 14:02:06"
+            "time": "2013-08-26 05:49:51"
         },
         {
             "name": "symfony/http-kernel",
-            "version": "v2.3.3",
+            "version": "v2.3.4",
             "target-dir": "Symfony/Component/HttpKernel",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/HttpKernel.git",
-                "reference": "7eb27ca1fa33d455a0b4667aedf0d6b4e53765c8"
+                "reference": "9d35da40f07bbe7a4f8dfbc41555d2b69de674bf"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/HttpKernel/zipball/7eb27ca1fa33d455a0b4667aedf0d6b4e53765c8",
-                "reference": "7eb27ca1fa33d455a0b4667aedf0d6b4e53765c8",
+                "url": "https://api.github.com/repos/symfony/HttpKernel/zipball/9d35da40f07bbe7a4f8dfbc41555d2b69de674bf",
+                "reference": "9d35da40f07bbe7a4f8dfbc41555d2b69de674bf",
                 "shasum": ""
             },
             "require": {
@@ -607,7 +607,7 @@
             ],
             "description": "Symfony HttpKernel Component",
             "homepage": "http://symfony.com",
-            "time": "2013-08-07 17:11:16"
+            "time": "2013-08-27 08:58:24"
         },
         {
             "name": "symfony/routing",

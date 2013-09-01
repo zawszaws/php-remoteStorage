@@ -3,22 +3,16 @@
 require_once dirname(__DIR__) . '/vendor/autoload.php';
 
 use fkooman\RemoteStorage\RemoteStorage;
-use fkooman\RemoteStorage\PathParser;
 use fkooman\RemoteStorage\FileStorage;
 use fkooman\RemoteStorage\JsonMimeHandler;
 
 use fkooman\oauth\rs\ResourceServer;
 use fkooman\oauth\rs\ResourceServerException;
 
-// next line goes away
-use fkooman\oauth\rs\TokenIntrospection;
-
 use fkooman\Config\Config;
 
 use Guzzle\Http\Client;
 
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
 $app = new Silex\Application();
@@ -26,59 +20,21 @@ $app['debug'] = true;
 
 $config = Config::fromIniFile(dirname(__DIR__) . DIRECTORY_SEPARATOR . "config" . DIRECTORY_SEPARATOR . "remoteStorage.ini");
 
-$filesDirectory = $config->getValue("filesDirectory", true);
-$fileStorage = new FileStorage(new JsonMimeHandler($filesDirectory . "/mimedb.json"), $filesDirectory);
+$app['fileStorage'] = function() use ($config) {
+    $filesDirectory = $config->getValue("filesDirectory", true);
 
-$tokenIntrospectionEndpoint = $config->getSection('OAuth')->getValue('introspectionEndpoint', true);
-$resourceServer = new ResourceServer(new Client($tokenIntrospectionEndpoint));
+    return new FileStorage(new JsonMimeHandler($filesDirectory . "/mimedb.json"), $filesDirectory);
+};
 
-$app->get('/{entityPath}', function (Request $request, $entityPath) use ($resourceServer, $fileStorage) {
-    //$tokenIntrospection = $resourceServer->verifyRequest($request->headers->get("Authorization"), $request->get('access_token'));
-    $tokenIntrospection = new TokenIntrospection(
-        array(
-            "active" => true,
-            "sub" => "admin",
-            "scope" => "music:r music:rw"
-        )
-    );
+$app['resourceServer'] = function() use ($config) {
+    $tokenIntrospectionEndpoint = $config->getSection('OAuth')->getValue('introspectionEndpoint', true);
 
-    $remoteStorage = new RemoteStorage($fileStorage, $tokenIntrospection);
+    return new ResourceServer(new Client($tokenIntrospectionEndpoint));
+};
 
-    $ifNonMatch = $request->headers->get("If-None-Match");
-
-    $pathParser = new PathParser("/" . $entityPath);
-    if ($pathParser->getIsDirectory()) {
-        $directory = $remoteStorage->getDir($pathParser);
-
-        if ($ifNonMatch !== $directory->getEntityTag()) {
-            return new JsonResponse($directory->getFlatDirectoryList(), 200, array("ETag" => $directory->getEntityTag()));
-        }
-
-        return new Response("", 304, array("ETag" => $directory->getEntityTag()));
-    }
-
-    $file = $remoteStorage->getFile($pathParser);
-    if ($ifNonMatch !== $file->getEntityTag()) {
-        return new Response($file->getContent(), 200, array("ETag" => $file->getEntityTag(), "Content-Type" => $file->getMimeType()));
-    }
-
-    return new Response("", 304, array("ETag" => $file->getEntityTag()));
-
-})->assert('entityPath', '.*');
-
-$app->put('/{entityPath}', function (Request $request, $entityPath) use ($resourceServer, $fileStorage) {
-    $tokenIntrospection = $resourceServer->verifyRequest($request->headers->get("Authorization"), $request->get('access_token'));
-    $remoteStorage = new RemoteStorage($fileStorage, $tokenIntrospection);
-
-    return $remoteStorage->putFile(new PathParser("/" . $entityPath), $request->getContent(), $request->getMimeType());
-})->assert('entityPath', '.*');
-
-$app->delete('/{entityPath}', function (Request $request, $entityPath) use ($resourceServer, $fileStorage) {
-    $tokenIntrospection = $resourceServer->verifyRequest($request->headers->get("Authorization"), $request->get('access_token'));
-    $remoteStorage = new RemoteStorage($fileStorage, $tokenIntrospection);
-
-    return $remoteStorage->deleteFile(new PathParser("/" . $entityPath));
-})->assert('entityPath', '.*');
+$app->get('/{entityPath}', 'fkooman\RemoteStorage\RequestHandler::get')->assert('entityPath', '.*');
+$app->put('/{entityPath}', 'fkooman\RemoteStorage\RequestHandler::put')->assert('entityPath', '.*');
+$app->delete('/{entityPath}', 'fkooman\RemoteStorage\RequestHandler::delete')->assert('entityPath', '.*');
 
 $app->error(function (ResourceServerException $e, $code) {
     return new JsonResponse(

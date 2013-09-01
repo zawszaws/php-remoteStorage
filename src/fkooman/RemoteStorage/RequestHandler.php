@@ -23,10 +23,11 @@ class RequestHandler
         $tokenIntrospection = $this->introspectToken($request, $app);
         $remoteStorage = new RemoteStorage($app['fileStorage'], $tokenIntrospection);
 
+        $ifNonMatch = $request->headers->get("If-None-Match");
+
         $pathParser = new PathParser("/" . $entityPath);
         if ($pathParser->getIsDirectory()) {
             $directory = $remoteStorage->getDir($pathParser);
-            $ifNonMatch = $request->headers->get("If-None-Match");
             if ($ifNonMatch !== $directory->getEntityTag()) {
                 return new JsonResponse($directory->getFlatDirectoryList(), 200, array("ETag" => $directory->getEntityTag()));
             }
@@ -47,7 +48,7 @@ class RequestHandler
         $tokenIntrospection = $this->introspectToken($request, $app);
         $remoteStorage = new RemoteStorage($app['fileStorage'], $tokenIntrospection);
 
-        return $remoteStorage->putFile(new PathParser("/" . $entityPath), $request->getContent(), $request->getMimeType());
+        return $remoteStorage->putFile(new PathParser("/" . $entityPath), $request->getContent(), $request->headers->get('Content-Type'));
     }
 
     public function delete(Request $request, Application $app, $entityPath)

@@ -29,7 +29,16 @@ class RequestHandler
         if ($pathParser->getIsDirectory()) {
             $directory = $remoteStorage->getDir($pathParser);
             if ($ifNonMatch !== $directory->getEntityTag()) {
-                return new JsonResponse($directory->getFlatDirectoryList(), 200, array("ETag" => $directory->getEntityTag()));
+                return new JsonResponse(
+                    $directory->getFlatDirectoryList(),
+                    200,
+                    array(
+                        "ETag" => $directory->getEntityTag(),
+                        "Access-Control-Allow-Origin" => "*",
+                        "Access-Control-Allow-Methods" => "GET, PUT, DELETE",
+                        "Access-Control-Allow-Headers" => "Authorization, If-None-Match, Content-Type, Origin"
+                    )
+                );
             }
 
             return new Response("", 304, array("ETag" => $directory->getEntityTag()));
@@ -37,7 +46,17 @@ class RequestHandler
 
         $file = $remoteStorage->getFile($pathParser);
         if ($ifNonMatch !== $file->getEntityTag()) {
-            return new Response($file->getContent(), 200, array("ETag" => $file->getEntityTag(), "Content-Type" => $file->getMimeType()));
+            return new Response(
+                $file->getContent(),
+                200,
+                array(
+                    "ETag" => $file->getEntityTag(),
+                    "Content-Type" => $file->getMimeType(),
+                    "Access-Control-Allow-Origin" => "*",
+                    "Access-Control-Allow-Methods" => "GET, PUT, DELETE",
+                    "Access-Control-Allow-Headers" => "Authorization, If-None-Match, Content-Type, Origin"
+                )
+            );
         }
 
         return new Response("", 304, array("ETag" => $file->getEntityTag()));
@@ -48,7 +67,21 @@ class RequestHandler
         $tokenIntrospection = $this->introspectToken($request, $app);
         $remoteStorage = new RemoteStorage($app['fileStorage'], $tokenIntrospection);
 
-        return $remoteStorage->putFile(new PathParser("/" . $entityPath), $request->getContent(), $request->headers->get('Content-Type'));
+        $pathParser = new PathParser("/" . $entityPath);
+        $remoteStorage->putFile($pathParser, $request->getContent(), $request->headers->get('Content-Type'));
+
+        $file = $remoteStorage->getFile($pathParser);
+
+        return new Response(
+            "",
+            200,
+            array(
+                "ETag" => $file->getEntityTag(),
+                "Access-Control-Allow-Origin" => $request->headers->get('Origin'),
+                "Access-Control-Allow-Methods" => "GET, PUT, DELETE",
+                "Access-Control-Allow-Headers" => "Authorization, If-None-Match, Content-Type, Origin"
+            )
+        );
     }
 
     public function delete(Request $request, Application $app, $entityPath)
@@ -56,6 +89,33 @@ class RequestHandler
         $tokenIntrospection = $this->introspectToken($request, $app);
         $remoteStorage = new RemoteStorage($app['fileStorage'], $tokenIntrospection);
 
-        return $remoteStorage->deleteFile(new PathParser("/" . $entityPath));
+        $file = $remoteStorage->getFile($pathParser);
+
+        $remoteStorage->deleteFile(new PathParser("/" . $entityPath));
+
+        return new Response(
+            "",
+            200,
+            array(
+                "ETag" => $file->getEntityTag(),
+                "Access-Control-Allow-Origin" => $request->headers->get('Origin'),
+                "Access-Control-Allow-Methods" => "GET, PUT, DELETE",
+                "Access-Control-Allow-Headers" => "Authorization, If-None-Match, Content-Type, Origin"
+            )
+        );
     }
+
+    public function options(Request $request, Application $app, $entityPath)
+    {
+        return new Response(
+            "",
+            200,
+            array(
+                "Access-Control-Allow-Methods" => "GET, PUT, DELETE",
+                "Access-Control-Allow-Origin" => "*",
+                "Access-Control-Allow-Headers" => "Authorization, If-None-Match, Content-Type, Origin"
+            )
+        );
+    }
+
 }

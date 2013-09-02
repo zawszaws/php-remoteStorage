@@ -35,6 +35,7 @@ $app['resourceServer'] = function() use ($config) {
 $app->get('/{entityPath}', 'fkooman\RemoteStorage\RequestHandler::get')->assert('entityPath', '.*');
 $app->put('/{entityPath}', 'fkooman\RemoteStorage\RequestHandler::put')->assert('entityPath', '.*');
 $app->delete('/{entityPath}', 'fkooman\RemoteStorage\RequestHandler::delete')->assert('entityPath', '.*');
+$app->match('/{entityPath}', 'fkooman\RemoteStorage\RequestHandler::options')->method('OPTIONS')->assert('entityPath', '.*');
 
 $app->error(function (ResourceServerException $e, $code) {
     return new JsonResponse(

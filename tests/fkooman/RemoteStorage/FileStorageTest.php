@@ -1,12 +1,12 @@
 <?php
 
-require_once 'vendor/autoload.php';
+namespace fkooman\RemoteStorage;
 
 use fkooman\RemoteStorage\FileStorage;
 use fkooman\RemoteStorage\NullMimeHandler;
 use fkooman\RemoteStorage\Entity;
 
-class FileStorageTest extends PHPUnit_Framework_TestCase
+class FileStorageTest extends \PHPUnit_Framework_TestCase
 {
     private $fileStorage;
     private $baseDirectory;

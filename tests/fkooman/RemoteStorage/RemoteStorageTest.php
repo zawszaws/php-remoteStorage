@@ -1,6 +1,6 @@
 <?php
 
-require_once 'vendor/autoload.php';
+namespace fkooman\RemoteStorage;
 
 use fkooman\RemoteStorage\RemoteStorage;
 use fkooman\RemoteStorage\DummyStorage;
@@ -8,7 +8,7 @@ use fkooman\RemoteStorage\PathParser;
 
 use fkooman\oauth\rs\TokenIntrospection;
 
-class RemoteStorageTest extends PHPUnit_Framework_TestCase
+class RemoteStorageTest extends \PHPUnit_Framework_TestCase
 {
     private $remoteStorage;
 

@@ -1,11 +1,11 @@
 <?php
 
-require_once 'vendor/autoload.php';
+namespace fkooman\RemoteStorage;
 
 use fkooman\RemoteStorage\PathParser;
 use fkooman\RemoteStorage\PathParserException;
 
-class PathParserTest extends PHPUnit_Framework_TestCase
+class PathParserTest extends \PHPUnit_Framework_TestCase
 {
     public function testPrivateFile()
     {

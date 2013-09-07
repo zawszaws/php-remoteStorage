@@ -100,7 +100,7 @@ class RequestHandler
                 "ETag" => $file->getEntityTag(),
                 "Access-Control-Allow-Origin" => $request->headers->get('Origin'),
                 "Access-Control-Allow-Methods" => "GET, PUT, DELETE",
-                "Access-Control-Allow-Headers" => "Authorization, If-None-Match, Content-Type, Origin"
+                "Access-Control-Allow-Headers" => "Authorization, If-None-Match, Content-Type, Origin, ETag"
             )
         );
     }
@@ -113,7 +113,7 @@ class RequestHandler
             array(
                 "Access-Control-Allow-Methods" => "GET, PUT, DELETE",
                 "Access-Control-Allow-Origin" => "*",
-                "Access-Control-Allow-Headers" => "Authorization, If-None-Match, Content-Type, Origin"
+                "Access-Control-Allow-Headers" => "Authorization, If-None-Match, Content-Type, Origin, ETag"
             )
         );
     }

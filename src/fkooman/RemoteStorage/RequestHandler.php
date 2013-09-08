@@ -39,7 +39,7 @@ class RequestHandler
                         "ETag" => $directory->getEntityTag(),
                         "Access-Control-Allow-Origin" => "*",
                         "Access-Control-Allow-Methods" => self::ALLOWED_VERBS,
-                        "Access-Control-Allow-Headers" => self::ALLOWED_HEADERS 
+                        "Access-Control-Allow-Headers" => self::ALLOWED_HEADERS
                     )
                 );
             }

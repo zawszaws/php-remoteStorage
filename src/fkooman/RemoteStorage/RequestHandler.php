@@ -9,6 +9,9 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 
 class RequestHandler
 {
+    const ALLOWED_HEADERS = "Authorization, If-None-Match, Content-Type, Origin, ETag";
+    const ALLOWED_VERBS = "GET, PUT, DELETE, HEAD, OPTIONS";
+
     private function introspectToken(Request $request, Application $app)
     {
         $resourceServer = $app['resourceServer'];
@@ -35,8 +38,8 @@ class RequestHandler
                     array(
                         "ETag" => $directory->getEntityTag(),
                         "Access-Control-Allow-Origin" => "*",
-                        "Access-Control-Allow-Methods" => "GET, PUT, DELETE",
-                        "Access-Control-Allow-Headers" => "Authorization, If-None-Match, Content-Type, Origin"
+                        "Access-Control-Allow-Methods" => self::ALLOWED_VERBS,
+                        "Access-Control-Allow-Headers" => self::ALLOWED_HEADERS 
                     )
                 );
             }
@@ -53,8 +56,8 @@ class RequestHandler
                     "ETag" => $file->getEntityTag(),
                     "Content-Type" => $file->getMimeType(),
                     "Access-Control-Allow-Origin" => "*",
-                    "Access-Control-Allow-Methods" => "GET, PUT, DELETE",
-                    "Access-Control-Allow-Headers" => "Authorization, If-None-Match, Content-Type, Origin"
+                    "Access-Control-Allow-Methods" => self::ALLOWED_VERBS,
+                    "Access-Control-Allow-Headers" => self::ALLOWED_HEADERS
                 )
             );
         }
@@ -78,8 +81,8 @@ class RequestHandler
             array(
                 "ETag" => $file->getEntityTag(),
                 "Access-Control-Allow-Origin" => $request->headers->get('Origin'),
-                "Access-Control-Allow-Methods" => "GET, PUT, DELETE",
-                "Access-Control-Allow-Headers" => "Authorization, If-None-Match, Content-Type, Origin"
+                "Access-Control-Allow-Methods" => self::ALLOWED_VERBS,
+                "Access-Control-Allow-Headers" => self::ALLOWED_HEADERS
             )
         );
     }
@@ -99,8 +102,8 @@ class RequestHandler
             array(
                 "ETag" => $file->getEntityTag(),
                 "Access-Control-Allow-Origin" => $request->headers->get('Origin'),
-                "Access-Control-Allow-Methods" => "GET, PUT, DELETE",
-                "Access-Control-Allow-Headers" => "Authorization, If-None-Match, Content-Type, Origin, ETag"
+                "Access-Control-Allow-Methods" => self::ALLOWED_VERBS,
+                "Access-Control-Allow-Headers" => self::ALLOWED_HEADERS
             )
         );
     }
@@ -111,9 +114,9 @@ class RequestHandler
             "",
             200,
             array(
-                "Access-Control-Allow-Methods" => "GET, PUT, DELETE",
                 "Access-Control-Allow-Origin" => "*",
-                "Access-Control-Allow-Headers" => "Authorization, If-None-Match, Content-Type, Origin, ETag"
+                "Access-Control-Allow-Methods" => self::ALLOWED_VERBS,
+                "Access-Control-Allow-Headers" => self::ALLOWED_HEADERS
             )
         );
     }

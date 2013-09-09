@@ -96,6 +96,7 @@ class RequestHandler
     public function options(Request $request, Application $app, $entityPath)
     {
         $responseHeaders = new ResponseHeaders();
+
         return new Response(
             "",
             200,

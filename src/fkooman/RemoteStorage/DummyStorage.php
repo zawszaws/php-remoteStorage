@@ -23,11 +23,11 @@ class DummyStorage implements StorageInterface
 
     public function putDocument(PathParser $documentPath, $documentData, $documentMimeType)
     {
-        return true;
+        return new Node("918273");
     }
 
     public function deleteDocument(PathParser $documentPath)
     {
-        return true;
+        return new Node("11111111");
     }
 }

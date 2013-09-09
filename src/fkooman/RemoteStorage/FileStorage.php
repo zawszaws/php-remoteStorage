@@ -64,9 +64,11 @@ class FileStorage implements StorageInterface
             }
         }
 
+        // FIXME: if put failed because folder name --> 400
+        // FIXME: if put succeeded with new file --> 201?
         $this->mimeHandler->setMimeType($documentPath, $documentMimeType);
 
-        // FIXME: should return new entitytag
+        // FIXME: return Node with ETag
         return true;
     }
 
@@ -77,7 +79,11 @@ class FileStorage implements StorageInterface
 
         $documentPath = $this->storageRoot . $documentPath->getEntityPath();
 
-        // FIXME: probably should also return some ETag stuff
+        // FIXME:
+        // if delete failed because not exists --> 404
+        // if delete failed because folder --> 400
+
+        // FIXME: return Node with last ETag
         return @unlink($documentPath);
     }
 

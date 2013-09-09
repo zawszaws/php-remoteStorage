@@ -21,7 +21,7 @@ class Folder extends Node
     {
         $flatList = array();
         foreach ($this->folderList as $k => $v) {
-            $folderList[$k] = $v->getEntityTag();
+            $flatList[$k] = $v->getEntityTag();
         }
 
         return $flatList;

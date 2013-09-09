@@ -24,23 +24,36 @@ class RemoteStorageTest extends \PHPUnit_Framework_TestCase
         $this->remoteStorage = new RemoteStorage(new DummyStorage(), $tokenIntrospection);
     }
 
+    public function testGetFolder()
+    {
+        $folder = $this->remoteStorage->getFolder(new PathParser("/admin/foo/"));
+        $this->assertEquals(
+            array(
+                'foo.txt' => '654321',
+                'bar.txt' => '112233',
+                'bar/' => '665544'
+            ),
+            $folder->getFlatFolderList()
+        );
+    }
+
     public function testGetDocument()
     {
-        $this->remoteStorage->getDocument(new PathParser("/admin/foo/bar.txt"));
+        $document = $this->remoteStorage->getDocument(new PathParser("/admin/foo/bar.txt"));
+        $this->assertEquals("Hello World!", $document->getContent());
+        $this->assertEquals("text/plain", $document->getMimeType());
+        $this->assertEquals("443322", $document->getEntityTag());
     }
 
     public function testPutDocument()
     {
-        $this->remoteStorage->putDocument(new PathParser("/admin/bar/foo.txt"), "Hello World!", "text/plain");
-    }
-
-    public function testGetFolder()
-    {
-        $this->remoteStorage->getFolder(new PathParser("/admin/foo/"));
+        $node = $this->remoteStorage->putDocument(new PathParser("/admin/bar/foo.txt"), "Hello World!", "text/plain");
+        $this->assertEquals("918273", $node->getEntityTag());
     }
 
     public function testDeleteDocument()
     {
-        $this->remoteStorage->deleteDocument(new PathParser("/admin/bar/bar.txt"));
+        $node = $this->remoteStorage->deleteDocument(new PathParser("/admin/bar/bar.txt"));
+        $this->assertEquals("11111111", $node->getEntityTag());
     }
 }

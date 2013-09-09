@@ -6,7 +6,6 @@ use fkooman\RemoteStorage\StorageInterface;
 use fkooman\RemoteStorage\Path;
 use fkooman\RemoteStorage\Document;
 use fkooman\RemoteStorage\Folder;
-use fkooman\RemoteStorage\Node;
 
 class DummyStorage implements StorageInterface
 {
@@ -14,9 +13,9 @@ class DummyStorage implements StorageInterface
     {
         return new Folder(
             array(
-                "foo.txt" => new Node(2),
-                "bar.txt" => new Node(3),
-                "bar/" => new Node(4)
+                "foo.txt" => 2,
+                "bar.txt" => 3,
+                "bar/" => 4
             ),
             1
         );
@@ -29,11 +28,11 @@ class DummyStorage implements StorageInterface
 
     public function putDocument(Path $path, Document $document)
     {
-        return new Node(6);
+        return new Document($document->getContent(), $document->getMimeType(), $document->getRevisionId());
     }
 
     public function deleteDocument(Path $path)
     {
-        return new Node(7);
+        return new Document("Hello World!", "text/plain", 6);
     }
 }

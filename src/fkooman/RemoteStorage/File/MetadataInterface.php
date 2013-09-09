@@ -3,10 +3,9 @@
 namespace fkooman\RemoteStorage\File;
 
 use fkooman\RemoteStorage\Path;
-use fkooman\RemoteStorage\Node;
 
 interface MetadataInterface
 {
-    public function setMetadata(Path $path, Node $node);
+    public function setMetadata(Path $path, $mimeType, $revisionId);
     public function getMetadata(Path $path);
 }

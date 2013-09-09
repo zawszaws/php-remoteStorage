@@ -4,6 +4,7 @@ namespace fkooman\RemoteStorage;
 
 class Folder extends AbstractNode implements NodeInterface
 {
+    /** @var array */
     private $folderList;
 
     public function __construct(array $folderList, $revisionId = null)
@@ -12,19 +13,9 @@ class Folder extends AbstractNode implements NodeInterface
         $this->folderList = $folderList;
     }
 
-    public function getFolderList()
+    public function getContent()
     {
-        return $this->folderList;
-    }
-
-    public function getFlatFolderList()
-    {
-        $flatList = array();
-        foreach ($this->folderList as $name => $node) {
-            $flatList[$name] = $node->getRevisionId();
-        }
-
-        return $flatList;
+        return json_encode($this->folderList);
     }
 
     public function getMimeType()

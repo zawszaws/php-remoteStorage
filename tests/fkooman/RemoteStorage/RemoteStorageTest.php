@@ -28,12 +28,8 @@ class RemoteStorageTest extends \PHPUnit_Framework_TestCase
     {
         $folder = $this->remoteStorage->getFolder(new Path("/admin/foo/"));
         $this->assertEquals(
-            array(
-                'foo.txt' => 2,
-                'bar.txt' => 3,
-                'bar/' => 4
-            ),
-            $folder->getFlatFolderList()
+            '{"foo.txt":2,"bar.txt":3,"bar\/":4}',
+            $folder->getContent()
         );
     }
 
@@ -48,12 +44,12 @@ class RemoteStorageTest extends \PHPUnit_Framework_TestCase
     public function testPutDocument()
     {
         $node = $this->remoteStorage->putDocument(new Path("/admin/bar/foo.txt"), new Document("Hello World!", "text/plain"));
-        $this->assertEquals(6, $node->getRevisionId());
+        $this->assertEquals(1, $node->getRevisionId());
     }
 
     public function testDeleteDocument()
     {
         $node = $this->remoteStorage->deleteDocument(new Path("/admin/bar/bar.txt"));
-        $this->assertEquals(7, $node->getRevisionId());
+        $this->assertEquals(6, $node->getRevisionId());
     }
 }

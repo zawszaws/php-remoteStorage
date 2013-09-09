@@ -10,6 +10,7 @@ class Path
     private $isPublic;
     private $moduleName;
     private $isFolder;
+    private $isModuleRoot;
     private $path;
 
     public function __construct($path)
@@ -26,11 +27,14 @@ class Path
         if (4 > $partCount) {
             throw new PathException("path MUST include user and category folder");
         }
+        $this->isModuleRoot = 4 === $partCount;
+
         if ("public" === $entityParts[2]) {
             // if public, the entityParts need to contain an extra as "public" does not count then
             if (5 > $partCount) {
                 throw new PathException("public path MUST include user and category folder");
             }
+            $this->isModuleRoot = 5 === $partCount;
         }
 
         // path parts cannot be empty, except the last one
@@ -72,8 +76,17 @@ class Path
         return !$this->isFolder;
     }
 
-    public function getEntityPath()
+    public function getPath()
     {
         return $this->path;
+    }
+
+    public function getParentPath()
+    {
+        if ($this->isModuleRoot) {
+            return false;
+        }
+
+        return dirname($this->getPath()) . "/";
     }
 }

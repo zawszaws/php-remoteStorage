@@ -13,6 +13,8 @@ class PathTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals("admin", $p->getUserId());
         $this->assertFalse($p->getIsPublic());
         $this->assertFalse($p->getIsFolder());
+        $this->assertEquals("/admin/path/to/Document.txt", $p->getPath());
+        $this->assertEquals("/admin/path/to/", $p->getParentPath());
     }
 
     public function testPrivateFolder()
@@ -21,6 +23,8 @@ class PathTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals("admin", $p->getUserId());
         $this->assertFalse($p->getIsPublic());
         $this->assertTrue($p->getIsFolder());
+        $this->assertEquals("/admin/path/to/Folder/", $p->getPath());
+        $this->assertEquals("/admin/path/to/", $p->getParentPath());
     }
 
     public function testPublicDocument()
@@ -68,6 +72,7 @@ class PathTest extends \PHPUnit_Framework_TestCase
             "/admin/foo",
             "/admin/public/foo",
             "///",
+            "/admin/foo//bar/",
             "admin/public/foo.txt"
         );
         foreach ($testPath as $t) {

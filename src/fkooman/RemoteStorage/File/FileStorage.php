@@ -3,9 +3,10 @@
 namespace fkooman\RemoteStorage\File;
 
 use fkooman\RemoteStorage\StorageInterface;
-use fkooman\RemoteStorage\Node;
 use fkooman\RemoteStorage\Path;
 use fkooman\RemoteStorage\Document;
+use fkooman\RemoteStorage\Folder;
+use fkooman\RemoteStorage\File\Exception\FileStorageException;
 
 class FileStorage implements StorageInterface
 {
@@ -23,24 +24,26 @@ class FileStorage implements StorageInterface
 
     public function getFolder(Path $path)
     {
-        $folderPath = $this->storageRoot . $path->getEntityPath();
+        $folderPath = $this->storageRoot . $path->getPath();
+
         $currentFolder = getcwd();
         if (false === @chdir($folderPath)) {
             throw new FileStorageException("unable to change to folder");
         }
         $folderList = array();
         foreach (glob("*", GLOB_MARK) as $entry) {
-            $folderList[$entry] = new Node($this->getEntityTag($folderPath . "/" . $entry));
+            $metadata = $this->metadataHandler->getMetadata(new Path($folderPath . $entry));
+            $folderList[$entry] = $metadata['revisionId'];
         }
         // the chdir below MUST always work...
         @chdir($curentFolder);
 
-        return new Folder($this->getEntityTag($folderPath), $folderList);
+        return new Folder($folderList, $this->metadataHandler->getMetadata(new Path($folderPath)));
     }
 
-    public function getDocument(Path $documentPath)
+    public function getDocument(Path $path)
     {
-        $documentPath = $this->storageRoot . $documentPath->getEntityPath();
+        $documentPath = $this->storageRoot . $path->getPath();
 
         if (is_dir($documentPath)) {
             throw new FileStorageException("path points to folder, not document");
@@ -50,39 +53,40 @@ class FileStorage implements StorageInterface
             throw new FileStorageException("unable to read document");
         }
 
-        $documentMimeType = $this->metadataHandler->getMimeType($documentPath);
-        $documentEntityTag = $this->getEntityTag($documentPath);
+        $documentMetadata = $this->metadataHandler->getMetadata(new Path($documentPath));
 
-        return new Document($documentEntityTag, $documentContent, $documentMimeType);
+        return new Document($documentContent, $documentMetadata['mimeType'], $documentMetadata['revisionId']);
     }
 
-    public function putDocument(Path $documentPath, Document $document)
+    public function putDocument(Path $path, Document $document)
     {
-        $documentPath = $this->storageRoot . $documentPath->getEntityPath();
+        $documentPath = $this->storageRoot . $path->getPath();
 
-        if (false === @file_put_contents($documentPath, $documentData)) {
+        if (false === @file_put_contents($documentPath, $document->getContent())) {
             if (false === $this->createFolder(dirname($documentPath))) {
                 throw new FileStorageException("unable to create folder");
             }
-            if (false === @file_put_contents($documentPath, $documentData)) {
+            if (false === @file_put_contents($documentPath, $document->getContent())) {
                 throw new FileStorageException("unable to store document");
             }
         }
 
         // FIXME: if put failed because folder name --> 400
         // FIXME: if put succeeded with new file --> 201?
-        $this->metadataHandler->setMetadata($documentPath, new Node($documentMimeType));
+        // FIXME: how to figure out if this is a new file?
+        $this->metadataHandler->setMetadata(new Path($documentPath), $document->getMimeType(), $document->getRevisionId());
+        // update all revisions from directories above
 
         // FIXME: return Node with ETag
         return true;
     }
 
-    public function deleteDocument(Path $documentPath)
+    public function deleteDocument(Path $path)
     {
         // FIXME: if folder is now empty, the folder should also be removed,
         // and all empty parent folders as well...
 
-        $documentPath = $this->storageRoot . $documentPath->getEntityPath();
+        $documentPath = $this->storageRoot . $path->getPath();
 
         // FIXME:
         // if delete failed because not exists --> 404
@@ -95,20 +99,6 @@ class FileStorage implements StorageInterface
     private function createFolder($folderPath)
     {
         return @mkdir($folderPath, 0775, true);
-    }
-
-    private function getDocumentEntityTag($entityPath)
-    {
-        // FIXME: return SHA hash of document
-        return filemtime($entityPath);
-    }
-
-    private function getFolderEntityTag($entityPath)
-    {
-        // FIXME: return SHA hash of directory listing serialization
-        // FIXME: this sucks as you have to recurse through the entire FS if you
-        // have sub folders
-        return filemtime($entityPath);
     }
 
     /*

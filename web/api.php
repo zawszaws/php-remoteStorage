@@ -4,7 +4,7 @@ require_once dirname(__DIR__) . '/vendor/autoload.php';
 
 use fkooman\RemoteStorage\RemoteStorage;
 use fkooman\RemoteStorage\File\FileStorage;
-use fkooman\RemoteStorage\File\JsonMimeHandler;
+use fkooman\RemoteStorage\File\JsonMetadata;
 
 use fkooman\oauth\rs\ResourceServer;
 use fkooman\oauth\rs\ResourceServerException;
@@ -23,7 +23,7 @@ $config = Config::fromIniFile(dirname(__DIR__) . DIRECTORY_SEPARATOR . "config" 
 $app['documentStorage'] = function() use ($config) {
     $filesDirectory = $config->getValue("filesDirectory", true);
 
-    return new FileStorage(new JsonMimeHandler($filesDirectory . "/mimedb.json"), $filesDirectory);
+    return new FileStorage(new JsonMetadata($filesDirectory . "/mimedb.json"), $filesDirectory);
 };
 
 $app['resourceServer'] = function() use ($config) {

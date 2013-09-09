@@ -2,6 +2,8 @@
 
 namespace fkooman\RemoteStorage;
 
+use fkooman\RemoteStorage\Exception\RemoteStorageException;
+
 use fkooman\oauth\rs\TokenIntrospection;
 
 /**

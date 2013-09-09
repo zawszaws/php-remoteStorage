@@ -26,9 +26,9 @@ class RequestHandler
 
         $ifNonMatch = $request->headers->get("If-None-Match");
 
-        $pathParser = new PathParser("/" . $entityPath);
-        if ($pathParser->getIsFolder()) {
-            $folder = $remoteStorage->getFolder($pathParser);
+        $Path = new Path("/" . $entityPath);
+        if ($Path->getIsFolder()) {
+            $folder = $remoteStorage->getFolder($Path);
             if ($ifNonMatch !== $folder->getEntityTag()) {
                 return new JsonResponse(
                     $folder->getFlatFolderList(),
@@ -40,7 +40,7 @@ class RequestHandler
             return new Response("", 304, $ResponseHeaders->getHeaders($folder, "*"));
         }
 
-        $document = $remoteStorage->getDocument($pathParser);
+        $document = $remoteStorage->getDocument($Path);
         if ($ifNonMatch !== $document->getEntityTag()) {
             return new Response(
                 $document->getContent(),
@@ -63,11 +63,11 @@ class RequestHandler
             // FIXME: if the document exists it should fail to perform the put!
         }
 
-        $pathParser = new PathParser("/" . $entityPath);
+        $Path = new Path("/" . $entityPath);
 
-        $remoteStorage->putDocument($pathParser, $request->getContent(), $request->headers->get('Content-Type'));
+        $remoteStorage->putDocument($Path, $request->getContent(), $request->headers->get('Content-Type'));
 
-        $document = $remoteStorage->getDocument($pathParser);
+        $document = $remoteStorage->getDocument($Path);
 
         return new Response(
             "",
@@ -82,9 +82,9 @@ class RequestHandler
         $remoteStorage = new RemoteStorage($app['documentStorage'], $tokenIntrospection);
         $responseHeaders = new ResponseHeaders();
 
-        $document = $remoteStorage->getDocument($pathParser);
+        $document = $remoteStorage->getDocument($Path);
 
-        $remoteStorage->deleteDocument(new PathParser("/" . $entityPath));
+        $remoteStorage->deleteDocument(new Path("/" . $entityPath));
 
         return new Response(
             "",

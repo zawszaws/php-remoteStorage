@@ -2,6 +2,8 @@
 
 namespace fkooman\RemoteStorage\File;
 
+use fkooman\RemoteStorage\Path;
+
 class JsonMetadata implements MetadataInterface
 {
     private $metadataFile;
@@ -19,30 +21,58 @@ class JsonMetadata implements MetadataInterface
         }
     }
 
-    public function getMetadata($nodePath)
+    public function setMetadata(Path $path, $mimeType, $revisionId = 1)
     {
-        if (!array_key_exists($nodePath, $this->metadataFileContent)) {
-            throw new MetadataException("unable to get metadata for this node");
+        if (!is_string($mimeType) || 0 >= strlen($mimeType)) {
+            throw new MetadataException("mime type must be non-empty string");
+        }
+        $this->metadataDb[$path->getPath()] = array(
+            'mimeType' => $mimeType,
+            'revisionId' => $revisionId
+        );
+        $this->incrementParentFoldersRevisionId($path);
+        $this->writeJsonFile();
+    }
+
+    public function getMetadata(Path $path)
+    {
+        if (!isset($this->metadataDb[$path->getPath()])) {
+            throw new MetadataException(sprintf("unable to get metadata for '%s' node", $path->getPath()));
         }
 
-        return new Node($this->metadataFileContent[$nodePath]);
+        return array(
+            "mimeType" => $this->metadataDb[$path->getPath()]['mimeType'],
+            "revisionId" => $this->metadataDb[$path->getPath()]['revisionId']
+        );
     }
 
-    public function setMimeType($filePath, $mimeType)
+    private function incrementParentFoldersRevisionId(Path $path)
     {
-        $this->metadataFileContent[$filePath] = $mimeType;
-        if (false === @file_put_contents($this->mimeDbFile, json_encode($this->mimeDb))) {
-            throw new MimeHandlerException("unable to set mime type for this file");
+        while (false !== $path->getParentPath()) {
+            $path = new Path($path->getParentPath());
+            $this->incrementFolderRevisionId($path);
         }
     }
 
-    public function incrementRevision($filePath)
+    private function incrementFolderRevisionId(Path $path)
     {
-
+        if (!$path->getIsFolder()) {
+            throw new MetadataException("not a folder");
+        }
+        if (isset($this->metadataDb[$path->getPath()])) {
+            $this->metadataDb[$path->getPath()]['revisionId'] = $this->metadataDb[$path->getPath()]['revisionId'] + 1;
+        } else {
+            $this->metadataDb[$path->getPath()] = array(
+                'mimeType' => "application/json",
+                'revisionId' => 1
+            );
+        }
     }
 
-    public function getRevision($filePath)
+    private function writeJsonFile()
     {
-
+        if (false === @file_put_contents($this->metadataFile, json_encode($this->metadataDb))) {
+            throw new MetadataException("unable to set mime type for this node");
+        }
     }
 }

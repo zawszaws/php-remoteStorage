@@ -2,14 +2,14 @@
 
 namespace fkooman\RemoteStorage;
 
-use fkooman\RemoteStorage\PathParser;
-use fkooman\RemoteStorage\PathParserException;
+use fkooman\RemoteStorage\Path;
+use fkooman\RemoteStorage\Exception\PathException;
 
-class PathParserTest extends \PHPUnit_Framework_TestCase
+class PathTest extends \PHPUnit_Framework_TestCase
 {
     public function testPrivateDocument()
     {
-        $p = new PathParser("/admin/path/to/Document.txt");
+        $p = new Path("/admin/path/to/Document.txt");
         $this->assertEquals("admin", $p->getUserId());
         $this->assertFalse($p->getIsPublic());
         $this->assertFalse($p->getIsFolder());
@@ -17,7 +17,7 @@ class PathParserTest extends \PHPUnit_Framework_TestCase
 
     public function testPrivateFolder()
     {
-        $p = new PathParser("/admin/path/to/Folder/");
+        $p = new Path("/admin/path/to/Folder/");
         $this->assertEquals("admin", $p->getUserId());
         $this->assertFalse($p->getIsPublic());
         $this->assertTrue($p->getIsFolder());
@@ -25,7 +25,7 @@ class PathParserTest extends \PHPUnit_Framework_TestCase
 
     public function testPublicDocument()
     {
-        $p = new PathParser("/admin/public/path/to/Document.txt");
+        $p = new Path("/admin/public/path/to/Document.txt");
         $this->assertEquals("admin", $p->getUserId());
         $this->assertTrue($p->getIsPublic());
         $this->assertFalse($p->getIsFolder());
@@ -33,7 +33,7 @@ class PathParserTest extends \PHPUnit_Framework_TestCase
 
     public function testPublicFolder()
     {
-        $p = new PathParser("/admin/public/path/to/Folder/");
+        $p = new Path("/admin/public/path/to/Folder/");
         $this->assertEquals("admin", $p->getUserId());
         $this->assertTrue($p->getIsPublic());
         $this->assertTrue($p->getIsFolder());
@@ -49,8 +49,9 @@ class PathParserTest extends \PHPUnit_Framework_TestCase
         );
         foreach ($testPath as $t) {
             try {
-                $p = new PathParser($t);
-            } catch (PathParserException $e) {
+                $p = new Path($t);
+                $this->assertTrue(true);
+            } catch (PathException $e) {
                 $this->assertTrue(false);
             }
         }
@@ -71,11 +72,11 @@ class PathParserTest extends \PHPUnit_Framework_TestCase
         );
         foreach ($testPath as $t) {
             try {
-                $p = new PathParser($t);
+                $p = new Path($t);
                 echo $t . PHP_EOL;
                 $this->assertTrue(false);
-            } catch (PathParserException $e) {
-                // nop
+            } catch (PathException $e) {
+                $this->assertTrue(true);
             }
         }
     }

@@ -1,24 +1,29 @@
 <?php
 
-namespace fkooman\RemoteStorage;
+namespace fkooman\RemoteStorage\File;
+
+use fkooman\RemoteStorage\StorageInterface;
+use fkooman\RemoteStorage\Node;
+use fkooman\RemoteStorage\Path;
+use fkooman\RemoteStorage\Document;
 
 class FileStorage implements StorageInterface
 {
-    /** @var MimeHandlerInterface */
-    private $mimeHandler;
+    /** @var MetadataInterface */
+    private $metadataHandler;
 
     /** @var string */
     private $storageRoot;
 
-    public function __construct(MimeHandlerInterface $mimeHandler, $storageRoot)
+    public function __construct(MetadataInterface $metadataHandler, $storageRoot)
     {
-        $this->mimeHandler = $mimeHandler;
+        $this->metadataHandler = $metadataHandler;
         $this->storageRoot = $storageRoot;
     }
 
-    public function getFolder(PathParser $folderPath)
+    public function getFolder(Path $path)
     {
-        $folderPath = $this->storageRoot . $folderPath->getEntityPath();
+        $folderPath = $this->storageRoot . $path->getEntityPath();
         $currentFolder = getcwd();
         if (false === @chdir($folderPath)) {
             throw new FileStorageException("unable to change to folder");
@@ -33,7 +38,7 @@ class FileStorage implements StorageInterface
         return new Folder($this->getEntityTag($folderPath), $folderList);
     }
 
-    public function getDocument(PathParser $documentPath)
+    public function getDocument(Path $documentPath)
     {
         $documentPath = $this->storageRoot . $documentPath->getEntityPath();
 
@@ -45,13 +50,13 @@ class FileStorage implements StorageInterface
             throw new FileStorageException("unable to read document");
         }
 
-        $documentMimeType = $this->mimeHandler->getMimeType($documentPath);
+        $documentMimeType = $this->metadataHandler->getMimeType($documentPath);
         $documentEntityTag = $this->getEntityTag($documentPath);
 
         return new Document($documentEntityTag, $documentContent, $documentMimeType);
     }
 
-    public function putDocument(PathParser $documentPath, $documentData, $documentMimeType)
+    public function putDocument(Path $documentPath, Document $document)
     {
         $documentPath = $this->storageRoot . $documentPath->getEntityPath();
 
@@ -66,13 +71,13 @@ class FileStorage implements StorageInterface
 
         // FIXME: if put failed because folder name --> 400
         // FIXME: if put succeeded with new file --> 201?
-        $this->mimeHandler->setMimeType($documentPath, $documentMimeType);
+        $this->metadataHandler->setMetadata($documentPath, new Node($documentMimeType));
 
         // FIXME: return Node with ETag
         return true;
     }
 
-    public function deleteDocument(PathParser $documentPath)
+    public function deleteDocument(Path $documentPath)
     {
         // FIXME: if folder is now empty, the folder should also be removed,
         // and all empty parent folders as well...
@@ -92,8 +97,17 @@ class FileStorage implements StorageInterface
         return @mkdir($folderPath, 0775, true);
     }
 
-    private function getEntityTag($entityPath)
+    private function getDocumentEntityTag($entityPath)
     {
+        // FIXME: return SHA hash of document
+        return filemtime($entityPath);
+    }
+
+    private function getFolderEntityTag($entityPath)
+    {
+        // FIXME: return SHA hash of directory listing serialization
+        // FIXME: this sucks as you have to recurse through the entire FS if you
+        // have sub folders
         return filemtime($entityPath);
     }
 

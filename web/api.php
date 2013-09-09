@@ -3,8 +3,8 @@
 require_once dirname(__DIR__) . '/vendor/autoload.php';
 
 use fkooman\RemoteStorage\RemoteStorage;
-use fkooman\RemoteStorage\FileStorage;
-use fkooman\RemoteStorage\JsonMimeHandler;
+use fkooman\RemoteStorage\File\FileStorage;
+use fkooman\RemoteStorage\File\JsonMimeHandler;
 
 use fkooman\oauth\rs\ResourceServer;
 use fkooman\oauth\rs\ResourceServerException;

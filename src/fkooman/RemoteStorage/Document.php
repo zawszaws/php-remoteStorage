@@ -2,15 +2,15 @@
 
 namespace fkooman\RemoteStorage;
 
-class Document extends Node
+class Document extends AbstractNode implements NodeInterface
 {
     private $content;
     private $mimeType;
 
-    public function __construct($entityTag, $fileContent, $mimeType)
+    public function __construct($content, $mimeType, $revisionId = null)
     {
-        parent::__construct($entityTag);
-        $this->content = $fileContent;
+        parent::__construct($revisionId);
+        $this->content = $content;
         $this->mimeType = $mimeType;
     }
 

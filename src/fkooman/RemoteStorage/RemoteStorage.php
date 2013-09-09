@@ -8,57 +8,57 @@ use fkooman\oauth\rs\TokenIntrospection;
  * Validate the path Request with the actual OAuth authorization information
  * And request stuff from the storage backend if validate matches
  */
-class RemoteStorage
+class RemoteStorage implements StorageInterface
 {
     private $storageBackend;
     private $tokenIntrospection;
 
-    public function __construct(StorageInterface $storageBackend, TokenIntrospection $tokenIntrospection = null)
+    public function __construct(StorageInterface $storageBackend, TokenIntrospection $tokenIntrospection)
     {
         $this->storageBackend = $storageBackend;
         $this->tokenIntrospection = $tokenIntrospection;
     }
 
-    public function getFolder(PathParser $pathParser)
+    public function getFolder(Path $path)
     {
-        $this->requireAuthorization($pathParser, array("r", "rw"));
+        $this->requireAuthorization($path, array("r", "rw"));
 
-        return $this->storageBackend->getFolder($pathParser);
+        return $this->storageBackend->getFolder($path);
     }
 
-    public function getDocument(PathParser $pathParser)
+    public function getDocument(Path $path)
     {
         // only require the user to match the folder when not public
-        if (!$pathParser->getIsPublic()) {
-            $this->requireAuthorization($pathParser, array("r", "rw"));
+        if (!$path->getIsPublic()) {
+            $this->requireAuthorization($path, array("r", "rw"));
         }
 
-        return $this->storageBackend->getDocument($pathParser);
+        return $this->storageBackend->getDocument($path);
     }
 
-    public function putDocument(PathParser $pathParser, $documentContent, $documentMimeType)
+    public function putDocument(Path $path, Document $document)
     {
         // always require the user to match the folder
-        $this->requireAuthorization($pathParser, array("rw"));
+        $this->requireAuthorization($path, array("rw"));
 
-        return $this->storageBackend->putDocument($pathParser, $documentContent, $documentMimeType);
+        return $this->storageBackend->putDocument($path, $document);
     }
 
-    public function deleteDocument(PathParser $pathParser)
+    public function deleteDocument(Path $path)
     {
         // always require the user to match the folder
-        $this->requireAuthorization($pathParser, array("rw"));
+        $this->requireAuthorization($path, array("rw"));
 
-        return $this->storageBackend->deleteDocument($pathParser);
+        return $this->storageBackend->deleteDocument($path);
     }
 
-    private function requireAuthorization(PathParser $pathParser, array $scopes)
+    private function requireAuthorization(Path $path, array $scopes)
     {
         // always require the user to match the folder
-        if ($pathParser->getUserId() !== $this->tokenIntrospection->getSub()) {
+        if ($path->getUserId() !== $this->tokenIntrospection->getSub()) {
             throw new RemoteStorageException("forbidden", "path needs to be owned by user making the request");
         }
-        $moduleName = $pathParser->getModuleName();
+        $moduleName = $path->getModuleName();
 
         $specificScopes = array();
         foreach ($scopes as $s) {

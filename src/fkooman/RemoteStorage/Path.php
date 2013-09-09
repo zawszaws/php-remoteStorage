@@ -2,39 +2,41 @@
 
 namespace fkooman\RemoteStorage;
 
-class PathParser
+use fkooman\RemoteStorage\Exception\PathException;
+
+class Path
 {
     private $userId;
     private $isPublic;
     private $moduleName;
     private $isFolder;
-    private $entityPath;
+    private $path;
 
-    public function __construct($entityPath)
+    public function __construct($path)
     {
-        if (!is_string($entityPath)) {
-            throw new PathParserException("path MUST be a string");
+        if (!is_string($path)) {
+            throw new PathException("path MUST be a string");
         }
-        if (0 !== strpos($entityPath, "/")) {
-            throw new PathParserException("path MUST start with a '/'");
+        if (0 !== strpos($path, "/")) {
+            throw new PathException("path MUST start with a '/'");
         }
 
-        $entityParts = explode("/", $entityPath);
+        $entityParts = explode("/", $path);
         $partCount = count($entityParts);
         if (4 > $partCount) {
-            throw new PathParserException("path MUST include user and category folder");
+            throw new PathException("path MUST include user and category folder");
         }
         if ("public" === $entityParts[2]) {
             // if public, the entityParts need to contain an extra as "public" does not count then
             if (5 > $partCount) {
-                throw new PathParserException("public path MUST include user and category folder");
+                throw new PathException("public path MUST include user and category folder");
             }
         }
 
         // path parts cannot be empty, except the last one
         for ($i = 1; $i < $partCount-1; $i++) {
             if (0 >= strlen($entityParts[$i])) {
-                throw new PathParserException("path part cannot be empty");
+                throw new PathException("path part cannot be empty");
             }
         }
 
@@ -42,7 +44,7 @@ class PathParser
         $this->isPublic = "public" === $entityParts[2];
         $this->moduleName = ($this->isPublic) ? $entityParts[3] : $entityParts[2];
         $this->isFolder = empty($entityParts[count($entityParts)-1]);
-        $this->entityPath = $entityPath;
+        $this->path = $path;
     }
 
     public function getUserId()
@@ -72,6 +74,6 @@ class PathParser
 
     public function getEntityPath()
     {
-        return $this->entityPath;
+        return $this->path;
     }
 }

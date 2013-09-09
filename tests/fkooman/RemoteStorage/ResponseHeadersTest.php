@@ -34,7 +34,7 @@ class ResponseHeadersTest extends \PHPUnit_Framework_TestCase
                 'Content-Type' => 'text/plain'
             ),
             $ResponseHeaders->getHeaders(
-                new Document(12345, "Hello World", "text/plain"),
+                new Document("Hello World", "text/plain", 12345),
                 "www.example.org"
             )
         );
@@ -51,7 +51,7 @@ class ResponseHeadersTest extends \PHPUnit_Framework_TestCase
                 'ETag' => '54321',
                 'Content-Type' => 'application/json'
             ),
-            $ResponseHeaders->getHeaders(new Folder(54321, array(new Node("54321"))), "www.example.org")
+            $ResponseHeaders->getHeaders(new Folder(array(new Node(54321)), 54321), "www.example.org")
         );
     }
 }

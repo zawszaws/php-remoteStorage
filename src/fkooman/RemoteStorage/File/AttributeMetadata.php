@@ -1,8 +1,8 @@
 <?php
 
-namespace fkooman\RemoteStorage;
+namespace fkooman\RemoteStorage\File;
 
-class AttributeMimeHandler implements MimeHandlerInterface
+class AttributeMetadata implements MetadataInterface
 {
     public function __construct()
     {

@@ -17,7 +17,7 @@ class ResponseHeaders
 
         // if a node is set include the entityTag as well
         if (null !== $node) {
-            $response["ETag"] = $node->getEntityTag();
+            $response["ETag"] = strval($node->getRevisionId());
         }
 
         // if the node is a document, also add the Content-Type

@@ -1,6 +1,6 @@
 <?php
 
-namespace fkooman\RemoteStorage;
+namespace fkooman\RemoteStorage\Exception;
 
 class RemoteStorageException extends \Exception
 {

@@ -7,7 +7,7 @@ class PathParser
     private $userId;
     private $isPublic;
     private $moduleName;
-    private $isDirectory;
+    private $isFolder;
     private $entityPath;
 
     public function __construct($entityPath)
@@ -22,12 +22,12 @@ class PathParser
         $entityParts = explode("/", $entityPath);
         $partCount = count($entityParts);
         if (4 > $partCount) {
-            throw new PathParserException("path MUST include user and category directory");
+            throw new PathParserException("path MUST include user and category folder");
         }
         if ("public" === $entityParts[2]) {
             // if public, the entityParts need to contain an extra as "public" does not count then
             if (5 > $partCount) {
-                throw new PathParserException("public path MUST include user and category directory");
+                throw new PathParserException("public path MUST include user and category folder");
             }
         }
 
@@ -41,7 +41,7 @@ class PathParser
         $this->userId = $entityParts[1];
         $this->isPublic = "public" === $entityParts[2];
         $this->moduleName = ($this->isPublic) ? $entityParts[3] : $entityParts[2];
-        $this->isDirectory = empty($entityParts[count($entityParts)-1]);
+        $this->isFolder = empty($entityParts[count($entityParts)-1]);
         $this->entityPath = $entityPath;
     }
 
@@ -60,14 +60,14 @@ class PathParser
         return $this->moduleName;
     }
 
-    public function getIsDirectory()
+    public function getIsFolder()
     {
-        return $this->isDirectory;
+        return $this->isFolder;
     }
 
-    public function getIsFile()
+    public function getIsDocument()
     {
-        return !$this->isDirectory;
+        return !$this->isFolder;
     }
 
     public function getEntityPath()

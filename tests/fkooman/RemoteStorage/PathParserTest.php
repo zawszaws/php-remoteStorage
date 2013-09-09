@@ -7,36 +7,36 @@ use fkooman\RemoteStorage\PathParserException;
 
 class PathParserTest extends \PHPUnit_Framework_TestCase
 {
-    public function testPrivateFile()
+    public function testPrivateDocument()
     {
-        $p = new PathParser("/admin/path/to/file.txt");
+        $p = new PathParser("/admin/path/to/Document.txt");
         $this->assertEquals("admin", $p->getUserId());
         $this->assertFalse($p->getIsPublic());
-        $this->assertFalse($p->getIsDirectory());
+        $this->assertFalse($p->getIsFolder());
     }
 
-    public function testPrivateDirectory()
+    public function testPrivateFolder()
     {
-        $p = new PathParser("/admin/path/to/directory/");
+        $p = new PathParser("/admin/path/to/Folder/");
         $this->assertEquals("admin", $p->getUserId());
         $this->assertFalse($p->getIsPublic());
-        $this->assertTrue($p->getIsDirectory());
+        $this->assertTrue($p->getIsFolder());
     }
 
-    public function testPublicFile()
+    public function testPublicDocument()
     {
-        $p = new PathParser("/admin/public/path/to/file.txt");
+        $p = new PathParser("/admin/public/path/to/Document.txt");
         $this->assertEquals("admin", $p->getUserId());
         $this->assertTrue($p->getIsPublic());
-        $this->assertFalse($p->getIsDirectory());
+        $this->assertFalse($p->getIsFolder());
     }
 
-    public function testPublicDirectory()
+    public function testPublicFolder()
     {
-        $p = new PathParser("/admin/public/path/to/directory/");
+        $p = new PathParser("/admin/public/path/to/Folder/");
         $this->assertEquals("admin", $p->getUserId());
         $this->assertTrue($p->getIsPublic());
-        $this->assertTrue($p->getIsDirectory());
+        $this->assertTrue($p->getIsFolder());
     }
 
     public function testValidPaths()
@@ -45,7 +45,7 @@ class PathParserTest extends \PHPUnit_Framework_TestCase
             "/admin/public/foo/",
             "/admin/foo/",
             "/admin/public/foo/bar.txt",
-            "/admin/public/foo/bar/very/long/path/with/file"
+            "/admin/public/foo/bar/very/long/path/with/Document"
         );
         foreach ($testPath as $t) {
             try {

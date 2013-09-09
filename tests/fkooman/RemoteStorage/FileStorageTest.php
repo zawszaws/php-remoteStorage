@@ -4,7 +4,7 @@ namespace fkooman\RemoteStorage;
 
 use fkooman\RemoteStorage\FileStorage;
 use fkooman\RemoteStorage\NullMimeHandler;
-use fkooman\RemoteStorage\Entity;
+use fkooman\RemoteStorage\Node;
 
 class FileStorageTest extends \PHPUnit_Framework_TestCase
 {
@@ -16,82 +16,88 @@ class FileStorageTest extends \PHPUnit_Framework_TestCase
         $this->baseDirectory = sys_get_temp_dir() . DIRECTORY_SEPARATOR . "remoteStorage_" . rand();
         $this->fileStorage = new FileStorage(new NullMimeHandler(), $this->baseDirectory);
 
-        $this->fileStorage->putFile("/foo.txt", "Hello World!", "text/plain");
-        touch($this->baseDirectory . "/foo.txt", 12345);
+        $this->fileStorage->putDocument(new PathParser("/admin/foo/foo.txt"), "Hello World!", "text/plain");
+        touch($this->baseDirectory . "/admin/foo/foo.txt", 12345);
 
-        $this->fileStorage->putFile("/bar/foobar.txt", "Hello World!", "text/plain");
-        touch($this->baseDirectory . "/bar/foobar.txt", 54321);
-        touch($this->baseDirectory . "/bar", 11111);
+        $this->fileStorage->putDocument(new PathParser("/admin/foo/bar/foobar.txt"), "Hello World!", "text/plain");
+        touch($this->baseDirectory . "/admin/foo/bar/foobar.txt", 54321);
+        touch($this->baseDirectory . "/admin/foo/bar", 11111);
     }
 
-    public function testGetDir()
+    public function testGetFolder()
     {
         $this->assertEquals(
             array(
-                "bar/" => new Entity(11111),
-                "foo.txt" => new Entity(12345)
+                "bar/" => new Node(11111),
+                "foo.txt" => new Node(12345)
             ),
-            $this->fileStorage->getDir("/")->getDirectoryList()
+            $this->fileStorage->getFolder(new PathParser("/admin/foo/"))->getFolderList()
         );
         $this->assertEquals(
             array(
-                "foobar.txt" => new Entity(54321)
+                "foobar.txt" => new Node(54321)
             ),
-            $this->fileStorage->getDir("/bar/")->getDirectoryList()
+            $this->fileStorage->getFolder(new PathParser("/admin/foo/bar/"))->getFolderList()
         );
 
     }
 
-    public function testGetFile()
+    public function testGetDocument()
     {
-        $this->assertEquals("Hello World!", $this->fileStorage->getFile("/foo.txt")->getContent());
-        $this->assertEquals("text/plain", $this->fileStorage->getFile("/foo.txt")->getMimeType());
+        $this->assertEquals("Hello World!", $this->fileStorage->getDocument(new PathParser("/admin/foo/foo.txt"))->getContent());
+        $this->assertEquals("text/plain", $this->fileStorage->getDocument(new PathParser("/admin/foo/foo.txt"))->getMimeType());
     }
 
-    public function testPutFile()
+    public function testPutDocument()
     {
-        $this->assertTrue($this->fileStorage->putFile("/hello.json", '{"hello": "world"}', "application/json"));
+        $this->assertTrue(
+            $this->fileStorage->putDocument(
+                new PathParser("/admin/foo/hello.json"),
+                '{"hello": "world"}',
+                "application/json"
+            )
+        );
     }
 
-    public function testDeleteFile()
+    public function testDeleteDocument()
     {
-        $this->assertTrue($this->fileStorage->deleteFile("/foo.txt"));
-    }
-
-    /**
-     * @expectedException fkooman\RemoteStorage\FileStorageException
-     * @expectedExceptionMessage unable to change to directory
-     */
-    public function testGetDirOnFile()
-    {
-        $this->fileStorage->getDir("/foo.txt");
+        $this->assertTrue($this->fileStorage->deleteDocument(new PathParser("/admin/foo/foo.txt")));
     }
 
     /**
      * @expectedException fkooman\RemoteStorage\FileStorageException
-     * @expectedExceptionMessage path points to directory, not file
+     * @expectedExceptionMessage unable to change to folder
      */
-    public function testGetFileOnDir()
+    public function testGetFolderOnDocument()
     {
-        $this->fileStorage->getFile("/");
+        $this->fileStorage->getFolder(new PathParser("/admin/foo/foo.txt"));
     }
 
     /**
      * @expectedException fkooman\RemoteStorage\FileStorageException
-     * @expectedExceptionMessage unable to read file
+     * @expectedExceptionMessage path points to folder, not document
      */
-    public function testGetFileOnNonExistingFile()
+    public function testGetDocumentOnFolder()
     {
-        $this->fileStorage->getFile("/not-there.txt");
+        $this->fileStorage->getDocument(new PathParser("/admin/foo/"));
     }
 
     /**
      * @expectedException fkooman\RemoteStorage\FileStorageException
-     * @expectedExceptionMessage unable to change to directory
+     * @expectedExceptionMessage unable to read document
      */
-    public function testGetDirOnNonExistingDir()
+    public function testGetDocumentOnNonExistingDocument()
     {
-        $this->fileStorage->getDir("/dir/not/there/");
+        $this->fileStorage->getDocument(new PathParser("/admin/foo/not-there.txt"));
+    }
+
+    /**
+     * @expectedException fkooman\RemoteStorage\FileStorageException
+     * @expectedExceptionMessage unable to change to folder
+     */
+    public function testGetFolderOnNonExistingFolder()
+    {
+        $this->fileStorage->getFolder(new PathParser("/folder/not/there/"));
     }
 
     public function tearDown()
@@ -99,15 +105,15 @@ class FileStorageTest extends \PHPUnit_Framework_TestCase
         $this->recursiveDelete($this->baseDirectory);
     }
 
-    private function recursiveDelete($dirPath)
+    private function recursiveDelete($folderPath)
     {
-        foreach (glob($dirPath . '/*') as $file) {
-            if (is_dir($file)) {
-                $this->recursiveDelete($file);
+        foreach (glob($folderPath . '/*') as $document) {
+            if (is_dir($document)) {
+                $this->recursiveDelete($document);
             } else {
-                unlink($file);
+                unlink($document);
             }
         }
-        rmdir($dirPath);
+        @rmdir($folderPath);
     }
 }

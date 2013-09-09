@@ -4,8 +4,8 @@ namespace fkooman\RemoteStorage;
 
 interface StorageInterface
 {
-    public function getDir($dirPath);
-    public function getFile($filePath);
-    public function putFile($filePath, $fileData, $mimeType);
-    public function deleteFile($filePath);
+    public function getFolder(PathParser $folderPath);
+    public function getDocument(PathParser $documentPath);
+    public function putDocument(PathParser $documentPath, $documentData, $documentMimeType);
+    public function deleteDocument(PathParser $documentPath);
 }

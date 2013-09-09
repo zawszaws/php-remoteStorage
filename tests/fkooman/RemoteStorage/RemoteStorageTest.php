@@ -24,23 +24,23 @@ class RemoteStorageTest extends \PHPUnit_Framework_TestCase
         $this->remoteStorage = new RemoteStorage(new DummyStorage(), $tokenIntrospection);
     }
 
-    public function testGetFile()
+    public function testGetDocument()
     {
-        $this->remoteStorage->getFile(new PathParser("/admin/foo/bar.txt"));
+        $this->remoteStorage->getDocument(new PathParser("/admin/foo/bar.txt"));
     }
 
-    public function testPutFile()
+    public function testPutDocument()
     {
-        $this->remoteStorage->putFile(new PathParser("/admin/bar/foo.txt"), "Hello World!", "text/plain");
+        $this->remoteStorage->putDocument(new PathParser("/admin/bar/foo.txt"), "Hello World!", "text/plain");
     }
 
-    public function testGetDir()
+    public function testGetFolder()
     {
-        $this->remoteStorage->getDir(new PathParser("/admin/foo/"));
+        $this->remoteStorage->getFolder(new PathParser("/admin/foo/"));
     }
 
-    public function testDeleteFile()
+    public function testDeleteDocument()
     {
-        $this->remoteStorage->deleteFile(new PathParser("/admin/bar/bar.txt"));
+        $this->remoteStorage->deleteDocument(new PathParser("/admin/bar/bar.txt"));
     }
 }

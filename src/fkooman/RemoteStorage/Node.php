@@ -2,7 +2,7 @@
 
 namespace fkooman\RemoteStorage;
 
-class Entity
+class Node
 {
     private $entityTag;
 

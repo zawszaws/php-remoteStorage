@@ -8,82 +8,82 @@ class FileStorage implements StorageInterface
     private $mimeHandler;
 
     /** @var string */
-    private $baseDirectory;
+    private $storageRoot;
 
-    public function __construct(MimeHandlerInterface $mimeHandler, $baseDirectory)
+    public function __construct(MimeHandlerInterface $mimeHandler, $storageRoot)
     {
         $this->mimeHandler = $mimeHandler;
-        $this->baseDirectory = $baseDirectory;
+        $this->storageRoot = $storageRoot;
     }
 
-    public function getDir($dirPath)
+    public function getFolder(PathParser $folderPath)
     {
-        $dirPath = $this->baseDirectory . $dirPath;
-        $currentDirectory = getcwd();
-        if (false === @chdir($dirPath)) {
-            throw new FileStorageException("unable to change to directory");
+        $folderPath = $this->storageRoot . $folderPath->getEntityPath();
+        $currentFolder = getcwd();
+        if (false === @chdir($folderPath)) {
+            throw new FileStorageException("unable to change to folder");
         }
-        $dirList = array();
+        $folderList = array();
         foreach (glob("*", GLOB_MARK) as $entry) {
-            $dirList[$entry] = new Entity($this->getEntityTag($dirPath . "/" . $entry));
+            $folderList[$entry] = new Node($this->getEntityTag($folderPath . "/" . $entry));
         }
         // the chdir below MUST always work...
-        @chdir($currentDirectory);
+        @chdir($curentFolder);
 
-        return new Directory($this->getEntityTag($dirPath), $dirList);
+        return new Folder($this->getEntityTag($folderPath), $folderList);
     }
 
-    public function getFile($filePath)
+    public function getDocument(PathParser $documentPath)
     {
-        $filePath = $this->baseDirectory . $filePath;
+        $documentPath = $this->storageRoot . $documentPath->getEntityPath();
 
-        if (is_dir($filePath)) {
-            throw new FileStorageException("path points to directory, not file");
+        if (is_dir($documentPath)) {
+            throw new FileStorageException("path points to folder, not document");
         }
-        $fileContent = @file_get_contents($filePath);
-        if (false === $fileContent) {
-            throw new FileStorageException("unable to read file");
+        $documentContent = @file_get_contents($documentPath);
+        if (false === $documentContent) {
+            throw new FileStorageException("unable to read document");
         }
 
-        $mimeType = $this->mimeHandler->getMimeType($filePath);
-        $entityTag = $this->getEntityTag($filePath);
+        $documentMimeType = $this->mimeHandler->getMimeType($documentPath);
+        $documentEntityTag = $this->getEntityTag($documentPath);
 
-        return new File($entityTag, $fileContent, $mimeType);
+        return new Document($documentEntityTag, $documentContent, $documentMimeType);
     }
 
-    public function putFile($filePath, $fileData, $mimeType)
+    public function putDocument(PathParser $documentPath, $documentData, $documentMimeType)
     {
-        $filePath = $this->baseDirectory . $filePath;
+        $documentPath = $this->storageRoot . $documentPath->getEntityPath();
 
-        if (false === @file_put_contents($filePath, $fileData)) {
-            if (false === $this->createDirectory(dirname($filePath))) {
-                throw new FileStorageException("unable to create directory");
+        if (false === @file_put_contents($documentPath, $documentData)) {
+            if (false === $this->createFolder(dirname($documentPath))) {
+                throw new FileStorageException("unable to create folder");
             }
-            if (false === @file_put_contents($filePath, $fileData)) {
-                throw new FileStorageException("unable to store file");
+            if (false === @file_put_contents($documentPath, $documentData)) {
+                throw new FileStorageException("unable to store document");
             }
         }
 
-        $this->mimeHandler->setMimeType($filePath, $mimeType);
+        $this->mimeHandler->setMimeType($documentPath, $documentMimeType);
 
         // FIXME: should return new entitytag
         return true;
     }
 
-    public function deleteFile($filePath)
+    public function deleteDocument(PathParser $documentPath)
     {
-        // FIXME: if directory is now empty, the dir should also be removed,
-        // and all empty parent directories as well...
+        // FIXME: if folder is now empty, the folder should also be removed,
+        // and all empty parent folders as well...
 
-        $filePath = $this->baseDirectory . $filePath;
+        $documentPath = $this->storageRoot . $documentPath->getEntityPath();
 
         // FIXME: probably should also return some ETag stuff
-        return @unlink($filePath);
+        return @unlink($documentPath);
     }
 
-    private function createDirectory($dirPath)
+    private function createFolder($folderPath)
     {
-        return @mkdir($dirPath, 0775, true);
+        return @mkdir($folderPath, 0775, true);
     }
 
     private function getEntityTag($entityPath)

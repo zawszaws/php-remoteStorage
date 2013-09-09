@@ -4,29 +4,29 @@ namespace fkooman\RemoteStorage;
 
 class DummyStorage implements StorageInterface
 {
-    public function getDir($dirPath)
+    public function getFolder(PathParser $folderPath)
     {
-        return new Directory(
+        return new Folder(
             123456,
             array(
-                "foo.txt" => new Entity(654321),
-                "bar.txt" => new Entity(112233),
-                "bar/" => new Entity(665544)
+                "foo.txt" => new Node(654321),
+                "bar.txt" => new Node(112233),
+                "bar/" => new Node(665544)
             )
         );
     }
 
-    public function getFile($filePath)
+    public function getDocument(PathParser $documentPath)
     {
-        return new File(443322, "Hello World!", "text/plain");
+        return new Document(443322, "Hello World!", "text/plain");
     }
 
-    public function putFile($filePath, $fileData, $mimeType)
+    public function putDocument(PathParser $documentPath, $documentData, $documentMimeType)
     {
         return true;
     }
 
-    public function deleteFile($filePath)
+    public function deleteDocument(PathParser $documentPath)
     {
         return true;
     }

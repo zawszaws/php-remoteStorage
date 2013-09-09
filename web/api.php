@@ -20,7 +20,7 @@ $app['debug'] = true;
 
 $config = Config::fromIniFile(dirname(__DIR__) . DIRECTORY_SEPARATOR . "config" . DIRECTORY_SEPARATOR . "remoteStorage.ini");
 
-$app['fileStorage'] = function() use ($config) {
+$app['documentStorage'] = function() use ($config) {
     $filesDirectory = $config->getValue("filesDirectory", true);
 
     return new FileStorage(new JsonMimeHandler($filesDirectory . "/mimedb.json"), $filesDirectory);
@@ -45,7 +45,7 @@ $app->error(function (ResourceServerException $e, $code) {
             "code" => $e->getStatusCode()
         ),
         $e->getStatusCode(),
-        array("WWW-Authenticate" => $e->getAuthenticateHeader())
+        array("X-Status-Code" => $e->getStatusCode(), "WWW-Authenticate" => $e->getAuthenticateHeader())
     );
 });
 

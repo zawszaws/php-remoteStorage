@@ -2,7 +2,7 @@
 
 namespace fkooman\RemoteStorage;
 
-class File extends Entity
+class Document extends Node
 {
     private $content;
     private $mimeType;

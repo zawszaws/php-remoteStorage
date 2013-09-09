@@ -9,9 +9,6 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 
 class RequestHandler
 {
-    const ALLOWED_HEADERS = "Authorization, If-None-Match, Content-Type, Origin, ETag";
-    const ALLOWED_VERBS = "GET, PUT, DELETE, HEAD, OPTIONS";
-
     private function introspectToken(Request $request, Application $app)
     {
         $resourceServer = $app['resourceServer'];
@@ -24,100 +21,85 @@ class RequestHandler
     public function get(Request $request, Application $app, $entityPath)
     {
         $tokenIntrospection = $this->introspectToken($request, $app);
-        $remoteStorage = new RemoteStorage($app['fileStorage'], $tokenIntrospection);
+        $remoteStorage = new RemoteStorage($app['documentStorage'], $tokenIntrospection);
+        $responseHeaders = new ResponseHeaders();
 
         $ifNonMatch = $request->headers->get("If-None-Match");
 
         $pathParser = new PathParser("/" . $entityPath);
-        if ($pathParser->getIsDirectory()) {
-            $directory = $remoteStorage->getDir($pathParser);
-            if ($ifNonMatch !== $directory->getEntityTag()) {
+        if ($pathParser->getIsFolder()) {
+            $folder = $remoteStorage->getFolder($pathParser);
+            if ($ifNonMatch !== $folder->getEntityTag()) {
                 return new JsonResponse(
-                    $directory->getFlatDirectoryList(),
+                    $folder->getFlatFolderList(),
                     200,
-                    array(
-                        "ETag" => $directory->getEntityTag(),
-                        "Access-Control-Allow-Origin" => "*",
-                        "Access-Control-Allow-Methods" => self::ALLOWED_VERBS,
-                        "Access-Control-Allow-Headers" => self::ALLOWED_HEADERS
-                    )
+                    $responseHeaders->getHeaders($folder, "*")
                 );
             }
 
-            return new Response("", 304, array("ETag" => $directory->getEntityTag()));
+            return new Response("", 304, $ResponseHeaders->getHeaders($folder, "*"));
         }
 
-        $file = $remoteStorage->getFile($pathParser);
-        if ($ifNonMatch !== $file->getEntityTag()) {
+        $document = $remoteStorage->getDocument($pathParser);
+        if ($ifNonMatch !== $document->getEntityTag()) {
             return new Response(
-                $file->getContent(),
+                $document->getContent(),
                 200,
-                array(
-                    "ETag" => $file->getEntityTag(),
-                    "Content-Type" => $file->getMimeType(),
-                    "Access-Control-Allow-Origin" => "*",
-                    "Access-Control-Allow-Methods" => self::ALLOWED_VERBS,
-                    "Access-Control-Allow-Headers" => self::ALLOWED_HEADERS
-                )
+                $responseHeaders->getHeaders($document, "*")
             );
         }
 
-        return new Response("", 304, array("ETag" => $file->getEntityTag()));
+        return new Response("", 304, $ResponseHeaders->getHeaders($document, "*"));
     }
 
     public function put(Request $request, Application $app, $entityPath)
     {
         $tokenIntrospection = $this->introspectToken($request, $app);
-        $remoteStorage = new RemoteStorage($app['fileStorage'], $tokenIntrospection);
+        $remoteStorage = new RemoteStorage($app['documentStorage'], $tokenIntrospection);
+        $responseHeaders = new ResponseHeaders();
+
+        $ifNonMatch = $request->headers->get("If-None-Match");
+        if ("*" === $ifNonMatch) {
+            // FIXME: if the document exists it should fail to perform the put!
+        }
 
         $pathParser = new PathParser("/" . $entityPath);
-        $remoteStorage->putFile($pathParser, $request->getContent(), $request->headers->get('Content-Type'));
 
-        $file = $remoteStorage->getFile($pathParser);
+        $remoteStorage->putDocument($pathParser, $request->getContent(), $request->headers->get('Content-Type'));
+
+        $document = $remoteStorage->getDocument($pathParser);
 
         return new Response(
             "",
             200,
-            array(
-                "ETag" => $file->getEntityTag(),
-                "Access-Control-Allow-Origin" => $request->headers->get('Origin'),
-                "Access-Control-Allow-Methods" => self::ALLOWED_VERBS,
-                "Access-Control-Allow-Headers" => self::ALLOWED_HEADERS
-            )
+            $responseHeaders->getHeaders($document, $request->headers->get('Origin'))
         );
     }
 
     public function delete(Request $request, Application $app, $entityPath)
     {
         $tokenIntrospection = $this->introspectToken($request, $app);
-        $remoteStorage = new RemoteStorage($app['fileStorage'], $tokenIntrospection);
+        $remoteStorage = new RemoteStorage($app['documentStorage'], $tokenIntrospection);
+        $responseHeaders = new ResponseHeaders();
 
-        $file = $remoteStorage->getFile($pathParser);
+        $document = $remoteStorage->getDocument($pathParser);
 
-        $remoteStorage->deleteFile(new PathParser("/" . $entityPath));
+        $remoteStorage->deleteDocument(new PathParser("/" . $entityPath));
 
         return new Response(
             "",
             200,
-            array(
-                "ETag" => $file->getEntityTag(),
-                "Access-Control-Allow-Origin" => $request->headers->get('Origin'),
-                "Access-Control-Allow-Methods" => self::ALLOWED_VERBS,
-                "Access-Control-Allow-Headers" => self::ALLOWED_HEADERS
-            )
+            $responseHeaders->getHeaders($document, $request->headers->get('Origin'))
         );
     }
 
     public function options(Request $request, Application $app, $entityPath)
     {
+        $responseHeaders = new ResponseHeaders();
         return new Response(
             "",
             200,
-            array(
-                "Access-Control-Allow-Origin" => "*",
-                "Access-Control-Allow-Methods" => self::ALLOWED_VERBS,
-                "Access-Control-Allow-Headers" => self::ALLOWED_HEADERS
-            )
+            $responseHeaders->getHeaders(null, "*")
         );
     }
 }

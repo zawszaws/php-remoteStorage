@@ -20,7 +20,7 @@ $app['debug'] = true;
 
 $config = Config::fromIniFile(dirname(__DIR__) . DIRECTORY_SEPARATOR . "config" . DIRECTORY_SEPARATOR . "remoteStorage.ini");
 
-$app['documentStorage'] = function() use ($config) {
+$app['storageBackend'] = function() use ($config) {
     $filesDirectory = $config->getValue("filesDirectory", true);
 
     return new FileStorage(new JsonMetadata($filesDirectory . "/mimedb.json"), $filesDirectory);

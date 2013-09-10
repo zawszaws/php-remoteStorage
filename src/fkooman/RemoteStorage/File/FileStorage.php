@@ -76,7 +76,11 @@ class FileStorage implements StorageInterface
         // FIXME: if put failed because folder name --> 400
         // FIXME: if put succeeded with new file --> 201?
         // FIXME: how to figure out if this is a new file?
-        $this->metadataHandler->setMetadata(new Path($documentPath), $document->getMimeType(), $document->getRevisionId());
+        $this->metadataHandler->setMetadata(
+            new Path($documentPath),
+            $document->getMimeType(),
+            $document->getRevisionId()
+        );
         // update all revisions from directories above
 
         // FIXME: return Node with ETag

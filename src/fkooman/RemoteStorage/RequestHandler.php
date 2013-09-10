@@ -2,25 +2,16 @@
 
 namespace fkooman\RemoteStorage;
 
-use Silex\Application;
+use Pimple;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class RequestHandler
 {
-    private function introspectToken(Request $request, Application $app)
-    {
-        $resourceServer = $app['resourceServer'];
-        $resourceServer->setAuthorizationHeader($request->headers->get("Authorization"));
-        $resourceServer->setAccessTokenQueryParameter($request->get('access_token'));
-
-        return $resourceServer->verifyToken();
-    }
-
-    public function get(Request $request, Application $app, $entityPath)
+    public function get(Request $request, Pimple $app, $entityPath)
     {
         $tokenIntrospection = $this->introspectToken($request, $app);
-        $remoteStorage = new RemoteStorage($app['documentStorage'], $tokenIntrospection);
+        $remoteStorage = new RemoteStorage($app['storageBackend'], $tokenIntrospection);
         $responseHeaders = new ResponseHeaders();
 
         $ifNonMatch = $request->headers->get("If-None-Match");
@@ -51,10 +42,10 @@ class RequestHandler
         return new Response("", 304, $responseHeaders->getHeaders($document, "*"));
     }
 
-    public function put(Request $request, Application $app, $entityPath)
+    public function put(Request $request, Pimple $app, $entityPath)
     {
         $tokenIntrospection = $this->introspectToken($request, $app);
-        $remoteStorage = new RemoteStorage($app['documentStorage'], $tokenIntrospection);
+        $remoteStorage = new RemoteStorage($app['storageBackend'], $tokenIntrospection);
         $responseHeaders = new ResponseHeaders();
 
         $ifNonMatch = $request->headers->get("If-None-Match");
@@ -64,7 +55,13 @@ class RequestHandler
 
         $path = new Path("/" . $entityPath);
 
-        $remoteStorage->putDocument($path, new Document($request->getContent(), $request->headers->get('Content-Type')));
+        $remoteStorage->putDocument(
+            $path,
+            new Document(
+                $request->getContent(),
+                $request->headers->get('Content-Type')
+            )
+        );
 
         $document = $remoteStorage->getDocument($path);
 
@@ -76,10 +73,10 @@ class RequestHandler
         );
     }
 
-    public function delete(Request $request, Application $app, $entityPath)
+    public function delete(Request $request, Pimple $app, $entityPath)
     {
         $tokenIntrospection = $this->introspectToken($request, $app);
-        $remoteStorage = new RemoteStorage($app['documentStorage'], $tokenIntrospection);
+        $remoteStorage = new RemoteStorage($app['storageBackend'], $tokenIntrospection);
         $responseHeaders = new ResponseHeaders();
 
         $document = $remoteStorage->getDocument(new Path("/" . $entityPath));
@@ -93,7 +90,7 @@ class RequestHandler
         );
     }
 
-    public function options(Request $request, Application $app, $entityPath)
+    public function options(Request $request, Pimple $app, $entityPath)
     {
         $responseHeaders = new ResponseHeaders();
 
@@ -102,5 +99,14 @@ class RequestHandler
             200,
             $responseHeaders->getHeaders(null, "*")
         );
+    }
+
+    private function introspectToken(Request $request, Pimple $app)
+    {
+        $resourceServer = $app['resourceServer'];
+        $resourceServer->setAuthorizationHeader($request->headers->get("Authorization"));
+        $resourceServer->setAccessTokenQueryParameter($request->get('access_token'));
+
+        return $resourceServer->verifyToken();
     }
 }

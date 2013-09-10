@@ -43,7 +43,10 @@ class RemoteStorageTest extends \PHPUnit_Framework_TestCase
 
     public function testPutDocument()
     {
-        $node = $this->remoteStorage->putDocument(new Path("/admin/bar/foo.txt"), new Document("Hello World!", "text/plain"));
+        $node = $this->remoteStorage->putDocument(
+            new Path("/admin/bar/foo.txt"),
+            new Document("Hello World!", "text/plain")
+        );
         $this->assertEquals(1, $node->getRevisionId());
     }
 

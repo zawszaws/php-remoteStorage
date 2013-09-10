@@ -19,7 +19,10 @@ class FileStorageTest extends \PHPUnit_Framework_TestCase
         $this->baseDirectory = sys_get_temp_dir() . DIRECTORY_SEPARATOR . "remoteStorage_" . rand();
         $this->fileStorage = new FileStorage(new NullMetadata(), $this->baseDirectory);
         $this->fileStorage->putDocument(new Path("/admin/foo/foo.txt"), new Document("Hello World!", "text/plain"));
-        $this->fileStorage->putDocument(new Path("/admin/foo/bar/foobar.txt"), new Document("Hello World!", "text/plain"));
+        $this->fileStorage->putDocument(
+            new Path("/admin/foo/bar/foobar.txt"),
+            new Document("Hello World!", "text/plain")
+        )   ;
     }
 
     public function testGetFolder()
@@ -37,8 +40,14 @@ class FileStorageTest extends \PHPUnit_Framework_TestCase
     public function testGetDocument()
     {
         //var_dump($this->fileStorage->getDocument(new Path("/admin/foo/foo.txt"))->getMimeType());
-        $this->assertEquals("Hello World!", $this->fileStorage->getDocument(new Path("/admin/foo/foo.txt"))->getContent());
-        $this->assertEquals("text/plain", $this->fileStorage->getDocument(new Path("/admin/foo/foo.txt"))->getMimeType());
+        $this->assertEquals(
+            "Hello World!",
+            $this->fileStorage->getDocument(new Path("/admin/foo/foo.txt"))->getContent()
+        );
+        $this->assertEquals(
+            "text/plain",
+            $this->fileStorage->getDocument(new Path("/admin/foo/foo.txt"))->getMimeType()
+        );
     }
 
     public function testPutDocument()

@@ -56,8 +56,13 @@ class RemoteStorage implements StorageInterface
 
     private function requireAuthorization(Path $path, array $scopes)
     {
+        $sub = $this->tokenIntrospection->getSub();
+        if (False === $sub) {
+            throw new RemoteStorageException("internal_server_error", "sub not available from token introspection endpoint");
+        }
+
         // always require the user to match the folder
-        if ($path->getUserId() !== $this->tokenIntrospection->getSub()) {
+        if ($path->getUserId() !== $sub) {
             throw new RemoteStorageException("forbidden", "path needs to be owned by user making the request");
         }
         $moduleName = $path->getModuleName();
@@ -68,15 +73,19 @@ class RemoteStorage implements StorageInterface
             $specificScopes[] = sprintf("root:%s", $s);
         }
         // always require the scope to match
-        $this->requireAnyScope($this->tokenIntrospection->getScope(), $specificScopes);
+        $this->requireAnyScope($specificScopes);
     }
 
     /**
      * Just any of the scopes in $requestedScope should be granted then we are
      * fine
      */
-    private function requireAnyScope($grantedScope, array $requestedScope)
+    private function requireAnyScope(array $requestedScope)
     {
+        $grantedScope = $this->tokenIntrospection->getScope();
+        if (False === $grantedScope) {
+            throw new RemoteStorageException("internal_server_error", "scope not available from token introspection endpoint");
+        }
         $grantedScopeArray = explode(" ", $grantedScope);
         foreach ($requestedScope as $scope) {
             if (in_array($scope, $grantedScopeArray)) {

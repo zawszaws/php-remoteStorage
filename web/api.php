@@ -49,8 +49,8 @@ $app->error(function (ResourceServerException $e, $code) {
     );
 });
 
-$app->error(function(Exception $e, $code) {
-    return new JsonResponse(array("code" => $code, "error" => $e->getMessage()), $code);
-});
+#$app->error(function(Exception $e, $code) {
+#    return new JsonResponse(array("code" => $code, "error" => $e->getMessage()), $code);
+#});
 
 $app->run();

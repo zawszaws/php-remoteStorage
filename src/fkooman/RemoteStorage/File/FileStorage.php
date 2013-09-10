@@ -38,7 +38,9 @@ class FileStorage implements StorageInterface
         // the chdir below MUST always work...
         @chdir($curentFolder);
 
-        return new Folder($folderList, $this->metadataHandler->getMetadata(new Path($folderPath)));
+        $metadata = $this->metadataHandler->getMetadata(new Path($folderPath));
+
+        return new Folder($folderList, $metadata['revisionId']);
     }
 
     public function getDocument(Path $path)

@@ -5,7 +5,6 @@ namespace fkooman\RemoteStorage;
 use Silex\Application;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\JsonResponse;
 
 class RequestHandler
 {
@@ -26,22 +25,22 @@ class RequestHandler
 
         $ifNonMatch = $request->headers->get("If-None-Match");
 
-        $Path = new Path("/" . $entityPath);
-        if ($Path->getIsFolder()) {
-            $folder = $remoteStorage->getFolder($Path);
-            if ($ifNonMatch !== $folder->getEntityTag()) {
-                return new JsonResponse(
-                    $folder->getFlatFolderList(),
+        $path = new Path("/" . $entityPath);
+        if ($path->getIsFolder()) {
+            $folder = $remoteStorage->getFolder($path);
+            if ($ifNonMatch !== $folder->getRevisionId()) {
+                return new Response(
+                    $folder->getContent(),
                     200,
                     $responseHeaders->getHeaders($folder, "*")
                 );
             }
 
-            return new Response("", 304, $ResponseHeaders->getHeaders($folder, "*"));
+            return new Response("", 304, $responseHeaders->getHeaders($folder, "*"));
         }
 
-        $document = $remoteStorage->getDocument($Path);
-        if ($ifNonMatch !== $document->getEntityTag()) {
+        $document = $remoteStorage->getDocument($path);
+        if ($ifNonMatch !== $document->getRevisionId()) {
             return new Response(
                 $document->getContent(),
                 200,
@@ -49,7 +48,7 @@ class RequestHandler
             );
         }
 
-        return new Response("", 304, $ResponseHeaders->getHeaders($document, "*"));
+        return new Response("", 304, $responseHeaders->getHeaders($document, "*"));
     }
 
     public function put(Request $request, Application $app, $entityPath)
@@ -63,16 +62,17 @@ class RequestHandler
             // FIXME: if the document exists it should fail to perform the put!
         }
 
-        $Path = new Path("/" . $entityPath);
+        $path = new Path("/" . $entityPath);
 
-        $remoteStorage->putDocument($Path, $request->getContent(), $request->headers->get('Content-Type'));
+        $remoteStorage->putDocument($path, new Document($request->getContent(), $request->headers->get('Content-Type')));
 
-        $document = $remoteStorage->getDocument($Path);
+        $document = $remoteStorage->getDocument($path);
 
+        // FIXME: respones code should be 201?
         return new Response(
             "",
             200,
-            $responseHeaders->getHeaders($document, $request->headers->get('Origin'))
+            $responseHeaders->getHeaders($document, $request->headers->get('Origin'), false)
         );
     }
 
@@ -82,14 +82,14 @@ class RequestHandler
         $remoteStorage = new RemoteStorage($app['documentStorage'], $tokenIntrospection);
         $responseHeaders = new ResponseHeaders();
 
-        $document = $remoteStorage->getDocument($Path);
+        $document = $remoteStorage->getDocument(new Path("/" . $entityPath));
 
         $remoteStorage->deleteDocument(new Path("/" . $entityPath));
 
         return new Response(
             "",
             200,
-            $responseHeaders->getHeaders($document, $request->headers->get('Origin'))
+            $responseHeaders->getHeaders($document, $request->headers->get('Origin'), false)
         );
     }
 

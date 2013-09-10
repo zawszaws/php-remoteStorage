@@ -2,6 +2,8 @@
 
 namespace fkooman\RemoteStorage;
 
+use fkooman\RemoteStorage\Exception\NodeException;
+
 class Document extends AbstractNode implements NodeInterface
 {
     private $content;
@@ -11,6 +13,10 @@ class Document extends AbstractNode implements NodeInterface
     {
         parent::__construct($revisionId);
         $this->content = $content;
+
+        if (!is_string($mimeType) || 0 >= strlen($mimeType)) {
+            throw new NodeException("mime type must be non-empty string");
+        }
         $this->mimeType = $mimeType;
     }
 

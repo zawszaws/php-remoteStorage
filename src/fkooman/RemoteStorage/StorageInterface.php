@@ -10,9 +10,9 @@ interface StorageInterface
     /** @return Document */
     public function getDocument(Path $path);
 
-    /** @return Node */
+    /** @return Document */
     public function putDocument(Path $document, Document $document);
 
-    /** @return Node */
+    /** @return Document */
     public function deleteDocument(Path $document);
 }

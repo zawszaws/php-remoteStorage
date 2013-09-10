@@ -3,7 +3,6 @@
 namespace fkooman\RemoteStorage;
 
 use fkooman\RemoteStorage\Exception\RemoteStorageException;
-
 use fkooman\oauth\rs\TokenIntrospection;
 
 /**
@@ -12,7 +11,10 @@ use fkooman\oauth\rs\TokenIntrospection;
  */
 class RemoteStorage implements StorageInterface
 {
+    /** @var fkooman\RemoteStorage\StorageInterface */
     private $storageBackend;
+
+    /** @var fkooman\oauth\rs\TokenIntrospection */
     private $tokenIntrospection;
 
     public function __construct(StorageInterface $storageBackend, TokenIntrospection $tokenIntrospection)
@@ -57,8 +59,11 @@ class RemoteStorage implements StorageInterface
     private function requireAuthorization(Path $path, array $scopes)
     {
         $sub = $this->tokenIntrospection->getSub();
-        if (False === $sub) {
-            throw new RemoteStorageException("internal_server_error", "sub not available from token introspection endpoint");
+        if (false === $sub) {
+            throw new RemoteStorageException(
+                "internal_server_error",
+                "sub information not available from token introspection endpoint"
+            );
         }
 
         // always require the user to match the folder
@@ -83,8 +88,11 @@ class RemoteStorage implements StorageInterface
     private function requireAnyScope(array $requestedScope)
     {
         $grantedScope = $this->tokenIntrospection->getScope();
-        if (False === $grantedScope) {
-            throw new RemoteStorageException("internal_server_error", "scope not available from token introspection endpoint");
+        if (false === $grantedScope) {
+            throw new RemoteStorageException(
+                "internal_server_error",
+                "scope information not available from token introspection endpoint"
+            );
         }
         $grantedScopeArray = explode(" ", $grantedScope);
         foreach ($requestedScope as $scope) {

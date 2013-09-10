@@ -6,7 +6,10 @@ use fkooman\RemoteStorage\Exception\NodeException;
 
 class Document extends AbstractNode implements NodeInterface
 {
+    /** @var string */
     private $content;
+
+    /** @var string */
     private $mimeType;
 
     public function __construct($content, $mimeType, $revisionId = null)

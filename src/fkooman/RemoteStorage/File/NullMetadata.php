@@ -27,8 +27,8 @@ class NullMetadata implements MetadataInterface
 
     private function incrementParentFoldersRevisionId(Path $path)
     {
-        while (false !== $path->getParentPath()) {
-            $path = new Path($path->getParentPath());
+        while (false !== $path->getParentFolder()) {
+            $path = new Path($path->getParentFolder());
             $this->incrementFolderRevisionId($path);
         }
     }

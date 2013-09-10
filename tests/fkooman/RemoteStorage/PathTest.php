@@ -14,7 +14,7 @@ class PathTest extends \PHPUnit_Framework_TestCase
         $this->assertFalse($p->getIsPublic());
         $this->assertFalse($p->getIsFolder());
         $this->assertEquals("/admin/path/to/Document.txt", $p->getPath());
-        $this->assertEquals("/admin/path/to/", $p->getParentPath());
+        $this->assertEquals("/admin/path/to/", $p->getParentFolder());
     }
 
     public function testPrivateFolder()
@@ -24,7 +24,8 @@ class PathTest extends \PHPUnit_Framework_TestCase
         $this->assertFalse($p->getIsPublic());
         $this->assertTrue($p->getIsFolder());
         $this->assertEquals("/admin/path/to/Folder/", $p->getPath());
-        $this->assertEquals("/admin/path/to/", $p->getParentPath());
+        $this->assertEquals("/admin/path/to/", $p->getParentFolder());
+        $this->assertEquals("path", $p->getModuleName());
     }
 
     public function testPublicDocument()
@@ -41,6 +42,38 @@ class PathTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals("admin", $p->getUserId());
         $this->assertTrue($p->getIsPublic());
         $this->assertTrue($p->getIsFolder());
+        $this->assertFalse($p->getIsDocument());
+        $this->assertEquals("path", $p->getModuleName());
+    }
+
+    public function testParentFolderOnPrivateModuleRoot()
+    {
+        $p = new Path("/admin/module/");
+        $this->assertFalse($p->getParentFolder());
+    }
+
+    public function testParentFolderOnPublicModuleRoot()
+    {
+        $p = new Path("/admin/public/module/");
+        $this->assertFalse($p->getParentFolder());
+    }
+
+    public function testParentFolderForDocument()
+    {
+        $p = new Path("/admin/module/foo.txt");
+        $this->assertEquals("/admin/module/", $p->getParentFolder());
+    }
+
+    public function testParentFolderForPublicDocument()
+    {
+        $p = new Path("/admin/public/module/foo.txt");
+        $this->assertEquals("/admin/public/module/", $p->getParentFolder());
+    }
+
+    public function testParentFolderForFolder()
+    {
+        $p = new Path("/admin/module/bar/");
+        $this->assertEquals("/admin/module/", $p->getParentFolder());
     }
 
     public function testValidPaths()
@@ -59,6 +92,15 @@ class PathTest extends \PHPUnit_Framework_TestCase
                 $this->assertTrue(false);
             }
         }
+    }
+
+    /**
+     * @expectedException \fkooman\RemoteStorage\Exception\PathException
+     * @expectedExceptionMessage path must be a string
+     */
+    public function testNonStringPath()
+    {
+        $p = new Path(123);
     }
 
     public function testInvalidPaths()

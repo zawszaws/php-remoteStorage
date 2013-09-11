@@ -13,6 +13,7 @@ class ResponseHeaders
             "Access-Control-Allow-Origin" => (null === $requestOrigin) ? "*" : $requestOrigin,
             "Access-Control-Allow-Methods" => self::ALLOWED_VERBS,
             "Access-Control-Allow-Headers" => self::ALLOWED_HEADERS,
+            "Access-Control-Expose-Headers" => "ETag"
         );
 
         // if a node is set include the entityTag as well

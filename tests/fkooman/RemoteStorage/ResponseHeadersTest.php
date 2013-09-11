@@ -15,7 +15,8 @@ class ResponseHeadersTest extends \PHPUnit_Framework_TestCase
             array(
                 'Access-Control-Allow-Origin' => '*',
                 'Access-Control-Allow-Methods' => 'GET, PUT, DELETE',
-                'Access-Control-Allow-Headers' => 'Authorization, If-None-Match, Content-Type, Origin, ETag'
+                'Access-Control-Allow-Headers' => 'Authorization, If-None-Match, Content-Type, Origin, ETag',
+                'Access-Control-Expose-Headers' => 'ETag'
             ),
             $responseHeaders->getHeaders(null, "*")
         );
@@ -29,6 +30,7 @@ class ResponseHeadersTest extends \PHPUnit_Framework_TestCase
                 'Access-Control-Allow-Origin' => 'www.example.org',
                 'Access-Control-Allow-Methods' => 'GET, PUT, DELETE',
                 'Access-Control-Allow-Headers' => 'Authorization, If-None-Match, Content-Type, Origin, ETag',
+                'Access-Control-Expose-Headers' => 'ETag',
                 'ETag' => '11',
                 'Content-Type' => 'text/plain'
             ),
@@ -47,6 +49,7 @@ class ResponseHeadersTest extends \PHPUnit_Framework_TestCase
                 'Access-Control-Allow-Origin' => 'www.example.org',
                 'Access-Control-Allow-Methods' => 'GET, PUT, DELETE',
                 'Access-Control-Allow-Headers' => 'Authorization, If-None-Match, Content-Type, Origin, ETag',
+                'Access-Control-Expose-Headers' => 'ETag',
                 'ETag' => '4',
                 'Content-Type' => 'application/json'
             ),

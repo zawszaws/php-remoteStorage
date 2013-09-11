@@ -107,6 +107,7 @@ class RequestHandler
         $resourceServer->setAuthorizationHeader($request->headers->get("Authorization"));
         $resourceServer->setAccessTokenQueryParameter($request->get('access_token'));
 
+        // FIXME: validate it is valid before returning it
         return $resourceServer->verifyToken();
     }
 }

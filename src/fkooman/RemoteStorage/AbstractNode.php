@@ -11,6 +11,11 @@ abstract class AbstractNode implements NodeInterface
 
     public function __construct($revisionId = null)
     {
+        $this->setRevisionId($revisionId);
+    }
+
+    public function setRevisionId($revisionId)
+    {
         if (null === $revisionId) {
             $this->revisionId = 1;
         } else {

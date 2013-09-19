@@ -39,13 +39,7 @@ class RemoteStorageTest extends \PHPUnit_Framework_TestCase
 
     public function testGetFolderCurrentVersion()
     {
-        // request the current version of the folder, so we have to return a
-        // 304 instead of the folder listing
-        $folder = $this->remoteStorage->getFolder(new Path("/admin/foo/"), 1);
-        $this->assertEquals(
-            '{"foo.txt":2,"bar.txt":3,"bar\/":4}',
-            $folder->getContent()
-        );
+        $this->assertNull($this->remoteStorage->getFolder(new Path("/admin/foo/"), 1));
     }
 
     public function testGetDocument()
@@ -64,7 +58,7 @@ class RemoteStorageTest extends \PHPUnit_Framework_TestCase
             null,
             null
         );
-        $this->assertEquals(1, $node->getRevisionId());
+        $this->assertEquals(6, $node->getRevisionId());
     }
 
     public function testDeleteDocument()

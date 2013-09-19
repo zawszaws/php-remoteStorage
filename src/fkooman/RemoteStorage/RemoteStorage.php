@@ -85,8 +85,10 @@ class RemoteStorage
         $this->requireAuthorization($path, array("rw"));
 
         $document = $this->storageBackend->getDocument($path);
-        if ($ifMatch !== $document->getRevisionId()) {
-            return false;
+        if (null !== $ifMatch) {
+            if ($ifMatch !== $document->getRevisionId()) {
+                throw new RemoteStorageException("precondition_failed", "existing document has unexpected revision");
+            }
         }
 
         return $this->storageBackend->deleteDocument($path);

@@ -2,6 +2,8 @@
 
 namespace fkooman\RemoteStorage;
 
+use fkooman\Json\Json;
+
 class Folder extends AbstractNode implements NodeInterface
 {
     /** @var array */
@@ -15,7 +17,7 @@ class Folder extends AbstractNode implements NodeInterface
 
     public function getContent()
     {
-        return json_encode($this->folderList);
+        return Json::enc($this->folderList);
     }
 
     public function getMimeType()

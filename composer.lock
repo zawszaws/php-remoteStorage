@@ -3,7 +3,7 @@
         "This file locks the dependencies of your project to a known state",
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file"
     ],
-    "hash": "689e9912379db4b9121a641a0419550c",
+    "hash": "287fb676a0fe77a07e4dca0b9af57c36",
     "packages": [
         {
             "name": "fkooman/php-lib-config",
@@ -83,16 +83,16 @@
         },
         {
             "name": "fkooman/php-lib-rest",
-            "version": "0.1.0",
+            "version": "dev-develop",
             "source": {
                 "type": "git",
                 "url": "https://github.com/fkooman/php-lib-rest.git",
-                "reference": "c88b521cf55876b1ee0d983631debe27ffdd3939"
+                "reference": "97e3af8711f694dfe9f91d6d90b09b5e04802a57"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/fkooman/php-lib-rest/zipball/c88b521cf55876b1ee0d983631debe27ffdd3939",
-                "reference": "c88b521cf55876b1ee0d983631debe27ffdd3939",
+                "url": "https://api.github.com/repos/fkooman/php-lib-rest/zipball/97e3af8711f694dfe9f91d6d90b09b5e04802a57",
+                "reference": "97e3af8711f694dfe9f91d6d90b09b5e04802a57",
                 "shasum": ""
             },
             "require": {
@@ -116,7 +116,7 @@
                 }
             ],
             "description": "Simple PHP library for writing REST applications.",
-            "time": "2013-09-15 15:08:18"
+            "time": "2013-09-19 15:01:23"
         },
         {
             "name": "fkooman/php-oauth-lib-rs",
@@ -357,9 +357,9 @@
 
     ],
     "minimum-stability": "stable",
-    "stability-flags": [
-
-    ],
+    "stability-flags": {
+        "fkooman/php-lib-rest": 20
+    },
     "platform": [
 
     ],

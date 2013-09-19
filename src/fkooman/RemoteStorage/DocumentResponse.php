@@ -10,5 +10,6 @@ class DocumentResponse extends Response
     {
         parent::__construct(200, $document->getMimeType());
         $this->setContent($document->getContent());
+        $this->setHeader("ETag", $document->getRevisionId());
     }
 }

@@ -9,7 +9,7 @@
     "name": "fkooman/php-remote-storage",
     "require": {
         "fkooman/php-lib-config": "0.2.*",
-        "fkooman/php-lib-rest": "0.1.*",
+        "fkooman/php-lib-rest": "dev-develop",
         "fkooman/php-oauth-lib-rs": "0.6.*"
     }
 }

@@ -2,112 +2,91 @@
 
 namespace fkooman\RemoteStorage;
 
-use Pimple;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
+use fkooman\Http\Request;
+
+use fkooman\OAuth\ResouceServer\ResourceServer;
 
 class RequestHandler
 {
-    public function get(Request $request, Pimple $app, $entityPath)
+    private $storageBackend;
+    private $resourceServer;
+
+    public function __construct(StorageInterface $storageBackend, ResourceServer $resourceServer)
     {
-        $tokenIntrospection = $this->introspectToken($request, $app);
-        $remoteStorage = new RemoteStorage($app['storageBackend'], $tokenIntrospection);
-        $responseHeaders = new ResponseHeaders();
+        $this->storageBackend = $storageBackend;
+        $this->resourceServer = $resourceServer;
+    }
 
-        $ifNonMatch = $request->headers->get("If-None-Match");
+    public function handleRequest(Request $request)
+    {
+        // if any authorization information is available, set it here
+        $this->resourceServer->setAuthorizationHeader($request->getHeader("Authorization"));
+        $this->resourceServer->setAccessTokenQueryParameter($request->getQueryParameter("access_token"));
 
-        $path = new Path("/" . $entityPath);
-        if ($path->getIsFolder()) {
-            $folder = $remoteStorage->getFolder($path);
-            if ($ifNonMatch !== $folder->getRevisionId()) {
-                return new Response(
-                    $folder->getContent(),
-                    200,
-                    $responseHeaders->getHeaders($folder, "*")
+        $remoteStorage = new RemoteStorage($this->storageBackend, $this->resourceServer);
+
+        $request->matchRest(
+            "GET",
+            "/:pathInfo+/",
+            function ($pathInfo) use ($request, $remoteStorage) {
+                return new FolderResponse(
+                    $remoteStorage->getFolder(
+                        $pathInfo,
+                        $request->getHeader("If-None-Match")
+                    )
                 );
             }
-
-            return new Response("", 304, $responseHeaders->getHeaders($folder, "*"));
-        }
-
-        $document = $remoteStorage->getDocument($path);
-        if ($ifNonMatch !== $document->getRevisionId()) {
-            return new Response(
-                $document->getContent(),
-                200,
-                $responseHeaders->getHeaders($document, "*")
-            );
-        }
-
-        return new Response("", 304, $responseHeaders->getHeaders($document, "*"));
-    }
-
-    public function put(Request $request, Pimple $app, $entityPath)
-    {
-        $tokenIntrospection = $this->introspectToken($request, $app);
-        $remoteStorage = new RemoteStorage($app['storageBackend'], $tokenIntrospection);
-        $responseHeaders = new ResponseHeaders();
-
-        $ifNonMatch = $request->headers->get("If-None-Match");
-        if ("*" === $ifNonMatch) {
-            // FIXME: if the document exists it should fail to perform the put!
-        }
-
-        $path = new Path("/" . $entityPath);
-
-        $remoteStorage->putDocument(
-            $path,
-            new Document(
-                $request->getContent(),
-                $request->headers->get('Content-Type')
-            )
         );
 
-        $document = $remoteStorage->getDocument($path);
-
-        // FIXME: respones code should be 201?
-        return new Response(
-            "",
-            200,
-            $responseHeaders->getHeaders($document, $request->headers->get('Origin'), false)
+        $request->matchRest(
+            "GET",
+            "/:pathInfo+",
+            function ($pathInfo) use ($request, $remoteStorage) {
+                return new DocumentResponse(
+                    $remoteStorage->getDocument(
+                        $pathInfo,
+                        $request->getHeader("If-None-Match")
+                    )
+                );
+            }
         );
-    }
 
-    public function delete(Request $request, Pimple $app, $entityPath)
-    {
-        $tokenIntrospection = $this->introspectToken($request, $app);
-        $remoteStorage = new RemoteStorage($app['storageBackend'], $tokenIntrospection);
-        $responseHeaders = new ResponseHeaders();
-
-        $document = $remoteStorage->getDocument(new Path("/" . $entityPath));
-
-        $remoteStorage->deleteDocument(new Path("/" . $entityPath));
-
-        return new Response(
-            "",
-            200,
-            $responseHeaders->getHeaders($document, $request->headers->get('Origin'), false)
+        $request->matchRest(
+            "PUT",
+            "/:pathInfo+",
+            function ($pathInfo) use ($request, $remoteStorage) {
+                return $remoteStorage->putDocument(
+                    $pathInfo,
+                    new Document(
+                        $request->getContent(),
+                        $request->getHeader("Content-Type")
+                    ),
+                    $request->getHeader("If-Match"),
+                    $request->getHeader("If-None-Match")
+                );
+            }
         );
-    }
 
-    public function options(Request $request, Pimple $app, $entityPath)
-    {
-        $responseHeaders = new ResponseHeaders();
-
-        return new Response(
-            "",
-            200,
-            $responseHeaders->getHeaders(null, "*")
+        $request->matchRest(
+            "DELETE",
+            "/:pathInfo+",
+            function ($pathInfo) use ($request, $remoteStorage) {
+                return $remoteStorage->deleteDocument(
+                    $pathInfo,
+                    $request->getHeader("If-Match")
+                );
+            }
         );
-    }
 
-    private function introspectToken(Request $request, Pimple $app)
-    {
-        $resourceServer = $app['resourceServer'];
-        $resourceServer->setAuthorizationHeader($request->headers->get("Authorization"));
-        $resourceServer->setAccessTokenQueryParameter($request->get('access_token'));
+        // FIXME: does this also match directory?
+        $request->matchRest(
+            "OPTIONS",
+            "/:pathInfo+",
+            function ($pathInfo) use ($remoteStorage) {
+                return $remoteStorage->optionsDocument($pathInfo);
+            }
+        );
 
-        // FIXME: validate it is valid before returning it
-        return $resourceServer->verifyToken();
+        // FIXME: default match
     }
 }

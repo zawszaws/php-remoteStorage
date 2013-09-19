@@ -2,10 +2,8 @@
 
 namespace fkooman\RemoteStorage;
 
-use Pimple;
-use fkooman\RemoteStorage\RequestHandler;
 use fkooman\RemoteStorage\Dummy\DummyStorage;
-use Symfony\Component\HttpFoundation\Request;
+use fkooman\OAuth\ResourceServer\ResourceServer;
 
 class RequestHandlerTest extends \PHPUnit_Framework_TestCase
 {
@@ -14,27 +12,23 @@ class RequestHandlerTest extends \PHPUnit_Framework_TestCase
 
     public function setUp()
     {
-        $this->diContainer = new Pimple();
-        $this->diContainer['storageBackend'] = function () {
-            return new DummyStorage();
-        };
+        $plugin = new \Guzzle\Plugin\Mock\MockPlugin();
+        $plugin->addResponse(
+            new \Guzzle\Http\Message\Response(
+                200,
+                null,
+                '{"active": true, "sub": "admin", "scope": "foo:rw"}'
+            )
+        );
+        $client = new \Guzzle\Http\Client("https://auth.example.org/introspect");
+        $client->addSubscriber($plugin);
 
-        $this->diContainer['resourceServer'] = function () {
-            $plugin = new \Guzzle\Plugin\Mock\MockPlugin();
-            $plugin->addResponse(
-                new \Guzzle\Http\Message\Response(
-                    200,
-                    null,
-                    '{"active": true, "sub": "admin", "scope": "foo:rw"}'
-                )
-            );
-            $client = new \Guzzle\Http\Client("https://auth.example.org/introspect");
-            $client->addSubscriber($plugin);
+        $resourceServer = new ResourceServer($client);
 
-            return new \fkooman\oauth\rs\ResourceServer($client);
-        };
-
-        $this->requestHandler = new RequestHandler();
+        $this->requestHandler = new RequestHandler(
+            new DummyStorage(),
+            $resourceServer
+        );
     }
 
     public function testGetDocument()

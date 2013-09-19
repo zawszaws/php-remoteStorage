@@ -3,14 +3,13 @@
         "psr-0": {
             "fkooman\\RemoteStorage\\": "src/"
         }
-    }, 
-    "description": "PHP remoteStorage Server", 
-    "license": "AGPL-3.0", 
-    "name": "fkooman/php-remote-storage", 
+    },
+    "description": "PHP remoteStorage Server",
+    "license": "AGPL-3.0",
+    "name": "fkooman/php-remote-storage",
     "require": {
-        "fkooman/php-lib-config": "0.2.*", 
-        "fkooman/php-oauth-lib-rs": "0.4.*", 
-        "pimple/pimple": "1.0.*", 
-        "silex/silex": "1.1.*"
+        "fkooman/php-lib-config": "0.2.*",
+        "fkooman/php-lib-rest": "0.1.*",
+        "fkooman/php-oauth-lib-rs": "0.6.*"
     }
 }

@@ -20,10 +20,10 @@ class RemoteStorageException extends \Exception
     public function getStatusCode()
     {
         switch ($this->message) {
+            case "precondition_failed":
+                return 412;
             case "not_found":
                 return 404;
-            case "not_authorized":
-                return 401;
             case "forbidden":
                 return 403;
             default:

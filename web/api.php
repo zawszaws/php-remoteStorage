@@ -6,51 +6,74 @@ use fkooman\RemoteStorage\RemoteStorage;
 use fkooman\RemoteStorage\File\FileStorage;
 use fkooman\RemoteStorage\File\JsonMetadata;
 
-use fkooman\oauth\rs\ResourceServer;
-use fkooman\oauth\rs\ResourceServerException;
-
 use fkooman\Config\Config;
+
+use fkooman\Http\IncomingRequest;
+use fkooman\Http\Request;
 
 use Guzzle\Http\Client;
 
-use Symfony\Component\HttpFoundation\JsonResponse;
+try {
+    $config = Config::fromIniFile(dirname(__DIR__) . "/config/remoteStorage.ini");
 
-$app = new Silex\Application();
-$app['debug'] = true;
-
-$config = Config::fromIniFile(dirname(__DIR__) . DIRECTORY_SEPARATOR . "config" . DIRECTORY_SEPARATOR . "remoteStorage.ini");
-
-$app['storageBackend'] = function() use ($config) {
-    $filesDirectory = $config->getValue("filesDirectory", true);
-
-    return new FileStorage(new JsonMetadata($filesDirectory . "/mimedb.json"), $filesDirectory);
-};
-
-$app['resourceServer'] = function() use ($config) {
-    $tokenIntrospectionEndpoint = $config->getSection('OAuth')->getValue('introspectionEndpoint', true);
-
-    return new ResourceServer(new Client($tokenIntrospectionEndpoint));
-};
-
-$app->get('/{entityPath}', 'fkooman\RemoteStorage\RequestHandler::get')->assert('entityPath', '.*');
-$app->put('/{entityPath}', 'fkooman\RemoteStorage\RequestHandler::put')->assert('entityPath', '.*');
-$app->delete('/{entityPath}', 'fkooman\RemoteStorage\RequestHandler::delete')->assert('entityPath', '.*');
-$app->match('/{entityPath}', 'fkooman\RemoteStorage\RequestHandler::options')->method('OPTIONS')->assert('entityPath', '.*');
-
-$app->error(function (ResourceServerException $e, $code) {
-    return new JsonResponse(
-        array(
-            "error" => $e->getMessage(),
-            "error_description" => $e->getDescription(),
-            "code" => $e->getStatusCode()
-        ),
-        $e->getStatusCode(),
-        array("X-Status-Code" => $e->getStatusCode(), "WWW-Authenticate" => $e->getAuthenticateHeader())
+    $fileStorage = new FileStorage(
+        new JsonMetadata(
+            $config->getValue("filesDirectory", true) . "/mimedb.json",
+            $config->getValue("filesDirectory", true)
+        )
     );
-});
 
-#$app->error(function(Exception $e, $code) {
-#    return new JsonResponse(array("code" => $code, "error" => $e->getMessage()), $code);
-#});
+    $resourceServer = new ResourceServer(
+        new Client(
+            $config->getSection('OAuth')->getValue('introspectionEndpoint', true)
+        )
+    );
 
-$app->run();
+    $request = Request::fromIncomingRequest(new IncomingRequest());
+
+    $requestHandler = new RequestHander($fileStorage, $resourceServer);
+    $response = $requestHandler->handleRequest($request);
+
+} catch (RemoteStorageException $e) {
+    // when there is a problem with the remoteStorage call
+    $response = new Response($e->getStatusCode(), "application/json");
+    $response->setContent(
+        Json::enc(
+            array(
+                "error" => $e->getMessage(),
+                "error_description" => $e->getDescription(),
+                "code" => $e->getStatusCode()
+            )
+        )
+    );
+} catch (ResourceServerException $e) {
+    // when there is a problem with the OAuth authorization
+    $response = new Response($e->getStatusCode(), "application/json");
+    $response->setHeader("WWW-Authenticate", $e->getAuthenticateHeader());
+    $response->setContent(
+        Json::enc(
+            array(
+                "error" => $e->getMessage(),
+                "error_description" => $e->getDescription(),
+                "code" => $e->getStatusCode()
+            )
+        )
+    );
+} catch (Exception $e) {
+    // in all other cases...
+    $response = new Response(500, "application/json");
+    $response->setContent(
+        Json::enc(
+            array(
+                "code" => 500,
+                "error" => "internal_server_error",
+                "error_description" => $e->getMessage()
+            )
+        )
+    );
+}
+
+if (null === $response) {
+    // FIXME: what if null?!
+    $response->sendResponse();
+}

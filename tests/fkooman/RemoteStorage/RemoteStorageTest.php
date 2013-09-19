@@ -2,11 +2,8 @@
 
 namespace fkooman\RemoteStorage;
 
-use fkooman\RemoteStorage\RemoteStorage;
 use fkooman\RemoteStorage\Dummy\DummyStorage;
-use fkooman\RemoteStorage\Path;
-
-use fkooman\oauth\rs\TokenIntrospection;
+use fkooman\OAuth\ResourceServer\ResourceServer;
 
 class RemoteStorageTest extends \PHPUnit_Framework_TestCase
 {
@@ -14,19 +11,37 @@ class RemoteStorageTest extends \PHPUnit_Framework_TestCase
 
     public function setUp()
     {
-        $tokenIntrospection = new TokenIntrospection(
-            array(
-                "active" => true,
-                "sub" => "admin",
-                "scope" => "foo:r bar:rw"
+        $plugin = new \Guzzle\Plugin\Mock\MockPlugin();
+        $plugin->addResponse(
+            new \Guzzle\Http\Message\Response(
+                200,
+                null,
+                '{"active": true, "sub": "admin", "scope": "foo:rw bar:rw"}'
             )
         );
-        $this->remoteStorage = new RemoteStorage(new DummyStorage(), $tokenIntrospection);
+        $client = new \Guzzle\Http\Client("https://auth.example.org/introspect");
+        $client->addSubscriber($plugin);
+
+        $resourceServer = new ResourceServer($client);
+        $resourceServer->setAuthorizationHeader("Bearer foo");
+
+        $this->remoteStorage = new RemoteStorage(new DummyStorage(), $resourceServer);
     }
 
     public function testGetFolder()
     {
-        $folder = $this->remoteStorage->getFolder(new Path("/admin/foo/"));
+        $folder = $this->remoteStorage->getFolder(new Path("/admin/foo/"), null);
+        $this->assertEquals(
+            '{"foo.txt":2,"bar.txt":3,"bar\/":4}',
+            $folder->getContent()
+        );
+    }
+
+    public function testGetFolderCurrentVersion()
+    {
+        // request the current version of the folder, so we have to return a
+        // 304 instead of the folder listing
+        $folder = $this->remoteStorage->getFolder(new Path("/admin/foo/"), 1);
         $this->assertEquals(
             '{"foo.txt":2,"bar.txt":3,"bar\/":4}',
             $folder->getContent()
@@ -35,7 +50,7 @@ class RemoteStorageTest extends \PHPUnit_Framework_TestCase
 
     public function testGetDocument()
     {
-        $document = $this->remoteStorage->getDocument(new Path("/admin/foo/bar.txt"));
+        $document = $this->remoteStorage->getDocument(new Path("/admin/foo/bar.txt"), null);
         $this->assertEquals("Hello World!", $document->getContent());
         $this->assertEquals("text/plain", $document->getMimeType());
         $this->assertEquals(5, $document->getRevisionId());
@@ -45,14 +60,16 @@ class RemoteStorageTest extends \PHPUnit_Framework_TestCase
     {
         $node = $this->remoteStorage->putDocument(
             new Path("/admin/bar/foo.txt"),
-            new Document("Hello World!", "text/plain")
+            new Document("Hello World!", "text/plain"),
+            null,
+            null
         );
         $this->assertEquals(1, $node->getRevisionId());
     }
 
     public function testDeleteDocument()
     {
-        $node = $this->remoteStorage->deleteDocument(new Path("/admin/bar/bar.txt"));
+        $node = $this->remoteStorage->deleteDocument(new Path("/admin/bar/bar.txt"), null);
         $this->assertEquals(6, $node->getRevisionId());
     }
 }

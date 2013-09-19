@@ -87,12 +87,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/fkooman/php-lib-rest.git",
-                "reference": "97e3af8711f694dfe9f91d6d90b09b5e04802a57"
+                "reference": "733fa72446ce2546529a27dc52132b17c1270731"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/fkooman/php-lib-rest/zipball/97e3af8711f694dfe9f91d6d90b09b5e04802a57",
-                "reference": "97e3af8711f694dfe9f91d6d90b09b5e04802a57",
+                "url": "https://api.github.com/repos/fkooman/php-lib-rest/zipball/733fa72446ce2546529a27dc52132b17c1270731",
+                "reference": "733fa72446ce2546529a27dc52132b17c1270731",
                 "shasum": ""
             },
             "require": {
@@ -115,8 +115,8 @@
                     "role": "Developer"
                 }
             ],
-            "description": "Simple PHP library for writing REST applications.",
-            "time": "2013-09-19 15:01:23"
+            "description": "Simple PHP library for writing REST services.",
+            "time": "2013-09-19 19:29:20"
         },
         {
             "name": "fkooman/php-oauth-lib-rs",

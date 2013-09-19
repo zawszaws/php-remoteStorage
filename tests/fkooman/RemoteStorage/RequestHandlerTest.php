@@ -58,35 +58,28 @@ class RequestHandlerTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(1, $response->getHeader("ETag"));
         $this->assertEquals('{"foo.txt":2,"bar.txt":3,"bar\/":4}', $response->getContent());
     }
-    /*
+
     public function testPutDocument()
     {
-        $request = Request::create(
-            "http://example.org/admin/foo/bar.txt",
-            "PUT",
-            array(),
-            array(),
-            array(),
-            array(),
-            "Hello World!"
-        );
-        $request->headers->set("Authorization", "Bearer foo");
-        $request->headers->set("Content-Type", "text/plain");
+        $request = new Request("http://example.org/admin/foo/bar.txt", "PUT");
+        $request->setPathInfo('/admin/foo/bar.txt');
+        $request->setContent("Hello World!");
+        $request->setContentType("text/plain");
+        $request->setHeader("Authorization", "Bearer foo");
 
-        $response = $this->requestHandler->put($request, $this->diContainer, "admin/foo/bar.txt");
+        $response = $this->requestHandler->handleRequest($request);
         // FIXME: statuscode should be 201
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals(5, $response->headers->get("ETag"));
+        $this->assertEquals(6, $response->getHeader("ETag"));
     }
 
     public function testDeleteDocument()
     {
-        $request = Request::create("http://example.org/admin/foo/bar.txt", "DELETE");
-        $request->headers->set("Authorization", "Bearer foo");
-
-        $response = $this->requestHandler->delete($request, $this->diContainer, "admin/foo/bar.txt");
+        $request = new Request("http://example.org/admin/foo/bar.txt", "DELETE");
+        $request->setPathInfo("/admin/foo/bar.txt");
+        $request->setHeader("Authorization", "Bearer foo");
+        $response = $this->requestHandler->handleRequest($request);
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals(5, $response->headers->get("ETag"));
+        $this->assertEquals(6, $response->getHeader("ETag"));
     }
-    */
 }

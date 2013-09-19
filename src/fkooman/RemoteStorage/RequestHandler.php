@@ -4,7 +4,6 @@ namespace fkooman\RemoteStorage;
 
 use fkooman\Http\Service;
 use fkooman\Http\Request;
-use fkooman\Http\Response;
 
 use fkooman\OAuth\ResourceServer\ResourceServer;
 
@@ -21,7 +20,7 @@ class RequestHandler
 
     public function handleRequest(Request $request)
     {
-        $service = new Service();
+        $service = new Service($request);
 
         // if any authorization information is available, set it here
         $this->resourceServer->setAuthorizationHeader($request->getHeader("Authorization"));
@@ -76,7 +75,7 @@ class RequestHandler
         $service->match(
             "DELETE",
             "/:pathInfo+",
-            function ($pathInfo) use ($request, &$response, $remoteStorage) {
+            function ($pathInfo) use ($request, $remoteStorage) {
                 return new DocumentResponse(
                     $remoteStorage->deleteDocument(
                         new Path($request->getPathInfo()),
@@ -86,17 +85,24 @@ class RequestHandler
             }
         );
 
-        // FIXME: does this also match directories?
+        // FIXME: make wildcard also match directories
         $service->match(
             "OPTIONS",
             "/:pathInfo+",
-            function ($pathInfo) use ($request, &$response, $remoteStorage) {
-                return $remoteStorage->optionsDocument(
-                    new Path($request->getPathInfo())
-                );
+            function ($pathInfo) use ($request, $remoteStorage) {
+                return new OptionsResponse();
             }
         );
 
-        return $service->run($request);
+        // FIXME: make wildcard also match directories
+        $service->match(
+            "OPTIONS",
+            "/:pathInfo+/",
+            function ($pathInfo) use ($request, $remoteStorage) {
+                return new OptionsResponse();
+            }
+        );
+
+        return $service->run();
     }
 }

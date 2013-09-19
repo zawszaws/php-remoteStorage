@@ -58,7 +58,7 @@ class RequestHandlerTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(1, $response->getHeader("ETag"));
         $this->assertEquals('{"foo.txt":2,"bar.txt":3,"bar\/":4}', $response->getContent());
     }
-/*
+    /*
     public function testPutDocument()
     {
         $request = Request::create(
@@ -88,5 +88,5 @@ class RequestHandlerTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals(5, $response->headers->get("ETag"));
     }
-*/
+    */
 }

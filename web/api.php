@@ -3,13 +3,20 @@
 require_once dirname(__DIR__) . '/vendor/autoload.php';
 
 use fkooman\RemoteStorage\RemoteStorage;
+use fkooman\RemoteStorage\RequestHandler;
 use fkooman\RemoteStorage\File\FileStorage;
 use fkooman\RemoteStorage\File\JsonMetadata;
+
+use fkooman\OAuth\ResourceServer\ResourceServer;
+use fkooman\OAuth\ResourceServer\ResourceServerException;
 
 use fkooman\Config\Config;
 
 use fkooman\Http\IncomingRequest;
 use fkooman\Http\Request;
+use fkooman\Http\Response;
+
+use fkooman\Json\Json;
 
 use Guzzle\Http\Client;
 
@@ -18,9 +25,9 @@ try {
 
     $fileStorage = new FileStorage(
         new JsonMetadata(
-            $config->getValue("filesDirectory", true) . "/mimedb.json",
-            $config->getValue("filesDirectory", true)
-        )
+            $config->getValue("filesDirectory", true) . "/mimedb.json"
+        ),
+        $config->getValue("filesDirectory", true)
     );
 
     $resourceServer = new ResourceServer(
@@ -30,7 +37,7 @@ try {
     );
 
     $request = Request::fromIncomingRequest(new IncomingRequest());
-    $requestHandler = new RequestHander($fileStorage, $resourceServer);
+    $requestHandler = new RequestHandler($fileStorage, $resourceServer);
     $requestHandler->handleRequest($request)->sendResponse();
 } catch (RemoteStorageException $e) {
     // when there is a problem with the remoteStorage call

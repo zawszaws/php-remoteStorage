@@ -30,10 +30,8 @@ try {
     );
 
     $request = Request::fromIncomingRequest(new IncomingRequest());
-
     $requestHandler = new RequestHander($fileStorage, $resourceServer);
-    $response = $requestHandler->handleRequest($request);
-
+    $requestHandler->handleRequest($request)->sendResponse();
 } catch (RemoteStorageException $e) {
     // when there is a problem with the remoteStorage call
     $response = new Response($e->getStatusCode(), "application/json");
@@ -46,6 +44,7 @@ try {
             )
         )
     );
+    $response->sendResponse();
 } catch (ResourceServerException $e) {
     // when there is a problem with the OAuth authorization
     $response = new Response($e->getStatusCode(), "application/json");
@@ -59,6 +58,7 @@ try {
             )
         )
     );
+    $response->sendResponse();
 } catch (Exception $e) {
     // in all other cases...
     $response = new Response(500, "application/json");
@@ -71,9 +71,5 @@ try {
             )
         )
     );
-}
-
-if (null === $response) {
-    // FIXME: what if null?!
     $response->sendResponse();
 }

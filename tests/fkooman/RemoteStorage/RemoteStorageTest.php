@@ -4,6 +4,7 @@ namespace fkooman\RemoteStorage;
 
 use fkooman\RemoteStorage\Dummy\DummyStorage;
 use fkooman\OAuth\ResourceServer\ResourceServer;
+use fkooman\RemoteStorage\File\NullMetadata;
 
 class RemoteStorageTest extends \PHPUnit_Framework_TestCase
 {
@@ -25,7 +26,8 @@ class RemoteStorageTest extends \PHPUnit_Framework_TestCase
         $resourceServer = new ResourceServer($client);
         $resourceServer->setAuthorizationHeader("Bearer foo");
 
-        $this->remoteStorage = new RemoteStorage(new DummyStorage(), $resourceServer);
+        $this->remoteStorage = new RemoteStorage(new DummyStorage(new NullMetadata()), $resourceServer);
+        $this->remoteStorage->putFile(new Path("/admin/foo/bar.txt"), new Document("Hello World!", "text/plain", 5));
     }
 
     public function testGetFolder()

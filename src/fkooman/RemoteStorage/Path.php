@@ -105,4 +105,16 @@ class Path
 
         return dirname($this->getPath()) . "/";
     }
+
+    public function getPathParts()
+    {
+        $pathParts = explode("/", $this->path);
+        for ($i = 0; $i < count($pathParts); $i++) {
+            if (empty($pathParts[$i])) {
+                unset($pathParts[$i]);
+            }
+        }
+
+        return array_values($pathParts);
+    }
 }

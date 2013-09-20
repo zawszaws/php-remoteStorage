@@ -28,15 +28,17 @@ class DummyStorage implements StorageInterface
 
     public function getFolder(Path $folderPath)
     {
+        if (!$folderPath->getIsFolder()) {
+            throw new FolderException("not a folder");
+        }
         $pathParts = $folderPath->getPathParts();
         $currentFolder = $this->documentStore;
 
         for ($i = 0; $i < count($pathParts) - 1; $i++) {
-            $newFolder = $currentFolder[$pathParts[$i]];
-            if (!isset($newFolder) || !is_array($newFolder)) {
+            if (!isset($currentFolder[$pathParts[$i]]) || !is_array($currentFolder[$pathParts[$i]])) {
                 throw new FolderException("folder not found");
             }
-            $currentFolder = $newFolder;
+            $currentFolder = $currentFolder[$pathParts[$i]];
         }
 
         $folderList = array();
@@ -54,6 +56,9 @@ class DummyStorage implements StorageInterface
 
     public function getDocument(Path $documentPath)
     {
+        if (!$documentPath->getIsDocument()) {
+            throw new DocumentException("not a document");
+        }
         $pathParts = $documentPath->getPathParts();
         $currentFolder = $this->documentStore;
 
@@ -88,27 +93,6 @@ class DummyStorage implements StorageInterface
         return true;
     }
 
-    public function deleteDocument(Path $documentPath)
-    {
-        // FIXME: also delete all folders above this entry that are empty
-        $pathParts = $documentPath->getPathParts();
-        $currentFolder = $this->documentStore;
-
-        for ($i = 0; $i < count($pathParts) - 1; $i++) {
-            $newFolder = $currentFolder[$pathParts[$i]];
-            if (!isset($newFolder) || !is_array($newFolder)) {
-                throw new DocumentException("document not found");
-            }
-            $currentFolder = $newFolder;
-        }
-        if (!isset($currentFolder[$pathParts[0]])) {
-            throw new DocumentException("document not found");
-        }
-        unset($currentFolder[$pathParts[0]]);
-
-        return true;
-    }
-
     private function storeDocument(array &$documentStore, array $restOfPath, &$documentContent)
     {
         $part = array_shift($restOfPath);
@@ -120,6 +104,47 @@ class DummyStorage implements StorageInterface
         } else {
             // FIXME: check if restOfPath is folder
             $documentStore[$part] = $documentContent;
+        }
+    }
+
+    public function deleteDocument(Path $documentPath)
+    {
+        $this->removeDocument($this->documentStore, $documentPath->getPathParts());
+        // delete metadata
+        $this->removeEmptyFolders($this->documentStore);
+
+        return true;
+    }
+
+    private function removeDocument(array &$documentStore, array $restOfPath)
+    {
+        $part = array_shift($restOfPath);
+        if (0 < count($restOfPath)) {
+            if (!isset($documentStore[$part])) {
+                throw new DocumentException("document not found");
+            }
+            $this->removeDocument($documentStore[$part], $restOfPath);
+        } else {
+            if (is_array($documentStore[$part])) {
+                throw new DocumentException("document is folder");
+            }
+            unset($documentStore[$part]);
+        }
+    }
+
+    private function removeEmptyFolders(array &$documentStore)
+    {
+        foreach ($documentStore as $key => $value) {
+            if (is_array($value)) {
+                // folder
+                if (0 === count($value)) {
+                    // empty folder, remove it
+                    unset($documentStore[$key]);
+                } else {
+                    // not empty, recurse in it
+                    $this->removeEmptyFolders($documentStore[$key]);
+                }
+            }
         }
     }
 

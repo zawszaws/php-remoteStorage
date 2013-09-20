@@ -4,7 +4,9 @@ namespace fkooman\RemoteStorage;
 
 use fkooman\RemoteStorage\Dummy\DummyStorage;
 use fkooman\RemoteStorage\File\NullMetadata;
-use fkooman\RemoteStorage\File\Exception\FileStorageException;
+
+use fkooman\RemoteStorage\Exception\FolderException;
+use fkooman\RemoteStorage\Exception\DocumentException;
 
 use fkooman\RemoteStorage\Document;
 use fkooman\RemoteStorage\Path;
@@ -29,10 +31,8 @@ class DummyStorageTest extends \PHPUnit_Framework_TestCase
     public function testGetFolder()
     {
         $this->assertEquals(
-            '{"bar\/":1,"foo.txt":1}',
-            $this->documentStorage->getFolder(
-                new Path("/admin/foo/")
-            )->getContent()
+            '{"foo.txt":1,"bar\/":1}',
+            $this->documentStorage->getFolder(new Path("/admin/foo/"))->getContent()
         );
         $this->assertEquals(
             '{"foobar.txt":1}',
@@ -69,8 +69,8 @@ class DummyStorageTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException fkooman\RemoteStorage\File\Exception\FileStorageException
-     * @expectedExceptionMessage unable to change to folder
+     * @expectedException fkooman\RemoteStorage\Exception\FolderException
+     * @expectedExceptionMessage not a folder
      */
     public function testGetFolderOnDocument()
     {
@@ -78,8 +78,8 @@ class DummyStorageTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException fkooman\RemoteStorage\File\Exception\FileStorageException
-     * @expectedExceptionMessage path points to folder, not document
+     * @expectedException fkooman\RemoteStorage\Exception\DocumentException
+     * @expectedExceptionMessage not a document
      */
     public function testGetDocumentOnFolder()
     {
@@ -87,8 +87,8 @@ class DummyStorageTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException fkooman\RemoteStorage\File\Exception\FileStorageException
-     * @expectedExceptionMessage unable to read document
+     * @expectedException fkooman\RemoteStorage\Exception\DocumentException
+     * @expectedExceptionMessage document not found
      */
     public function testGetDocumentOnNonExistingDocument()
     {
@@ -96,28 +96,11 @@ class DummyStorageTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException fkooman\RemoteStorage\File\Exception\FileStorageException
-     * @expectedExceptionMessage unable to change to folder
+     * @expectedException fkooman\RemoteStorage\Exception\FolderException
+     * @expectedExceptionMessage folder not found
      */
     public function testGetFolderOnNonExistingFolder()
     {
         $this->documentStorage->getFolder(new Path("/folder/not/there/"));
-    }
-
-    public function tearDown()
-    {
-        $this->recursiveDelete($this->baseDirectory);
-    }
-
-    private function recursiveDelete($folderPath)
-    {
-        foreach (glob($folderPath . '/*') as $document) {
-            if (is_dir($document)) {
-                $this->recursiveDelete($document);
-            } else {
-                unlink($document);
-            }
-        }
-        @rmdir($folderPath);
     }
 }

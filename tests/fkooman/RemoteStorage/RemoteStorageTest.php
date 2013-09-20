@@ -27,7 +27,7 @@ class RemoteStorageTest extends \PHPUnit_Framework_TestCase
         $resourceServer->setAuthorizationHeader("Bearer foo");
 
         $this->remoteStorage = new RemoteStorage(new DummyStorage(new NullMetadata()), $resourceServer);
-        $this->remoteStorage->putFile(new Path("/admin/foo/bar.txt"), new Document("Hello World!", "text/plain", 5));
+        $this->remoteStorage->putDocument(new Path("/admin/foo/bar.txt"), new Document("Hello World!", "text/plain", 5));
     }
 
     public function testGetFolder()

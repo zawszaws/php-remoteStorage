@@ -5,6 +5,9 @@ namespace fkooman\RemoteStorage;
 use fkooman\RemoteStorage\Dummy\DummyStorage;
 use fkooman\OAuth\ResourceServer\ResourceServer;
 use fkooman\Http\Request;
+use fkooman\RemoteStorage\File\NullMetadata;
+use fkooman\RemoteStorage\Document;
+use fkooman\RemoteStorage\Path;
 
 class RequestHandlerTest extends \PHPUnit_Framework_TestCase
 {
@@ -26,16 +29,23 @@ class RequestHandlerTest extends \PHPUnit_Framework_TestCase
 
         $resourceServer = new ResourceServer($client);
 
-        $this->requestHandler = new RequestHandler(
-            new DummyStorage(),
-            $resourceServer
+        $documentStore = new DummyStorage(new NullMetadata());
+        $documentStore->putDocument(
+            new Path("/admin/foo/foo.txt"),
+            new Document("Hello World!", "text/plain")
         );
+        $documentStore->putDocument(
+            new Path("/admin/foo/bar/foobar.txt"),
+            new Document("Hello World!", "text/plain")
+        );
+
+        $this->requestHandler = new RequestHandler($documentStore, $resourceServer);
     }
 
     public function testGetDocument()
     {
         $request = new Request("http://example.org/admin/foo/bar.txt", "GET");
-        $request->setPathInfo("/admin/foo/bar.txt");
+        $request->setPathInfo("/admin/foo/foo.txt");
         $request->setHeader("Authorization", "Bearer foo");
 
         $response = $this->requestHandler->handleRequest($request);
@@ -43,7 +53,7 @@ class RequestHandlerTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals("text/plain", $response->getHeader("Content-Type"));
         $this->assertEquals("Hello World!", $response->getContent());
-        $this->assertEquals(5, $response->getHeader("ETag"));
+        $this->assertEquals(1, $response->getHeader("ETag"));
     }
 
     public function testGetFolder()
@@ -55,8 +65,8 @@ class RequestHandlerTest extends \PHPUnit_Framework_TestCase
         $response = $this->requestHandler->handleRequest($request);
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals("application/json", $response->getHeader("Content-Type"));
-        $this->assertEquals(1, $response->getHeader("ETag"));
-        $this->assertEquals('{"foo.txt":2,"bar.txt":3,"bar\/":4}', $response->getContent());
+        $this->assertEquals(2, $response->getHeader("ETag"));
+        $this->assertEquals('{"foo.txt":1,"bar\/":1}', $response->getContent());
     }
 
     public function testPutDocument()
@@ -70,16 +80,16 @@ class RequestHandlerTest extends \PHPUnit_Framework_TestCase
         $response = $this->requestHandler->handleRequest($request);
         // FIXME: statuscode should be 201
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals(6, $response->getHeader("ETag"));
+        $this->assertEquals(1, $response->getHeader("ETag"));
     }
 
     public function testDeleteDocument()
     {
         $request = new Request("http://example.org/admin/foo/bar.txt", "DELETE");
-        $request->setPathInfo("/admin/foo/bar.txt");
+        $request->setPathInfo("/admin/foo/foo.txt");
         $request->setHeader("Authorization", "Bearer foo");
         $response = $this->requestHandler->handleRequest($request);
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals(6, $response->getHeader("ETag"));
+        $this->assertEquals(1, $response->getHeader("ETag"));
     }
 }

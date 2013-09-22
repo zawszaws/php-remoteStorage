@@ -63,11 +63,10 @@ class DummyStorage implements StorageInterface
         $currentFolder = $this->documentStore;
 
         for ($i = 0; $i < count($pathParts) - 1; $i++) {
-            $newFolder = $currentFolder[$pathParts[$i]];
-            if (!isset($newFolder) || !is_array($newFolder)) {
+            if (!isset($currentFolder[$pathParts[$i]]) || !is_array($currentFolder[$pathParts[$i]])) {
                 throw new DocumentException("document not found");
             }
-            $currentFolder = $newFolder;
+            $currentFolder = $currentFolder[$pathParts[$i]];
         }
         if (!isset($currentFolder[$pathParts[count($pathParts)-1]])) {
             throw new DocumentException("document not found");

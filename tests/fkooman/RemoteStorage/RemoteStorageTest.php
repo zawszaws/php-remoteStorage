@@ -6,35 +6,52 @@ use fkooman\RemoteStorage\Dummy\DummyStorage;
 use fkooman\OAuth\ResourceServer\ResourceServer;
 use fkooman\RemoteStorage\File\NullMetadata;
 
+use Guzzle\Http\Client;
+use Guzzle\Plugin\Mock\MockPlugin;
+use Guzzle\Http\Message\Response;
+
 class RemoteStorageTest extends \PHPUnit_Framework_TestCase
 {
     private $remoteStorage;
 
     public function setUp()
     {
-        $plugin = new \Guzzle\Plugin\Mock\MockPlugin();
+        $plugin = new MockPlugin();
+        // FIXME: why is the response requested twice sometimes?
+        // one should be enough!
         $plugin->addResponse(
-            new \Guzzle\Http\Message\Response(
+            new Response(
                 200,
                 null,
-                '{"active": true, "sub": "admin", "scope": "foo:rw bar:rw"}'
+                '{"active": true,"scope": "foo:rw bar:rw","sub": "admin"}'
+            )
+        )->addResponse(
+            new Response(
+                200,
+                null,
+                '{"active": true,"scope": "foo:rw bar:rw","sub": "admin"}'
             )
         );
-        $client = new \Guzzle\Http\Client("https://auth.example.org/introspect");
+        $client = new Client("http://foo.example.org/");
         $client->addSubscriber($plugin);
 
         $resourceServer = new ResourceServer($client);
         $resourceServer->setAuthorizationHeader("Bearer foo");
 
         $this->remoteStorage = new RemoteStorage(new DummyStorage(new NullMetadata()), $resourceServer);
-        $this->remoteStorage->putDocument(new Path("/admin/foo/bar.txt"), new Document("Hello World!", "text/plain", 5));
+        $this->remoteStorage->putDocument(
+            new Path("/admin/foo/bar.txt"),
+            new Document("Hello World!", "text/plain", 5),
+            null,
+            null
+        );
     }
 
     public function testGetFolder()
     {
         $folder = $this->remoteStorage->getFolder(new Path("/admin/foo/"), null);
         $this->assertEquals(
-            '{"foo.txt":2,"bar.txt":3,"bar\/":4}',
+            '{"bar.txt":5}',
             $folder->getContent()
         );
     }
@@ -54,18 +71,18 @@ class RemoteStorageTest extends \PHPUnit_Framework_TestCase
 
     public function testPutDocument()
     {
-        $node = $this->remoteStorage->putDocument(
+        $document = $this->remoteStorage->putDocument(
             new Path("/admin/bar/foo.txt"),
             new Document("Hello World!", "text/plain"),
             null,
             null
         );
-        $this->assertEquals(6, $node->getRevisionId());
+        $this->assertEquals(1, $document->getRevisionId());
     }
 
     public function testDeleteDocument()
     {
-        $node = $this->remoteStorage->deleteDocument(new Path("/admin/bar/bar.txt"), null);
-        $this->assertEquals(6, $node->getRevisionId());
+        $node = $this->remoteStorage->deleteDocument(new Path("/admin/foo/bar.txt"), null);
+        $this->assertEquals(5, $node->getRevisionId());
     }
 }

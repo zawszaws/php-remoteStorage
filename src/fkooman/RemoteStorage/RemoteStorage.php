@@ -5,6 +5,8 @@ namespace fkooman\RemoteStorage;
 use fkooman\OAuth\ResourceServer\ResourceServer;
 use fkooman\RemoteStorage\Exception\RemoteStorageException;
 
+use fkooman\RemoteStorage\Exception\DocumentException;
+
 /**
  * Validate the path Request with the actual OAuth authorization information
  * And request stuff from the storage backend if validate matches
@@ -59,7 +61,12 @@ class RemoteStorage
         // always require the user to match the folder
         $this->requireAuthorization($path, array("rw"));
 
-        $doc = $this->storageBackend->getDocument($path);
+        $doc = false;
+        try {
+            $doc = $this->storageBackend->getDocument($path);
+        } catch (DocumentException $e) {
+        }
+
         if (null !== $ifNonMatch) {
             if ("*" === $ifNonMatch && false !== $doc) {
                 throw new RemoteStorageException("precondition_failed", "document already exists");
@@ -76,7 +83,9 @@ class RemoteStorage
             $document->setRevisionId($doc->getRevisionId() + 1);
         }
 
-        return $this->storageBackend->putDocument($path, $document);
+        $this->storageBackend->putDocument($path, $document);
+
+        return $document;
     }
 
     public function deleteDocument(Path $path, $ifMatch)
@@ -91,7 +100,9 @@ class RemoteStorage
             }
         }
 
-        return $this->storageBackend->deleteDocument($path);
+        $this->storageBackend->deleteDocument($path);
+
+        return $document;
     }
 
     private function requireAuthorization(Path $path, array $requiredScope)

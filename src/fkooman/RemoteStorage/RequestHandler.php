@@ -11,11 +11,13 @@ class RequestHandler
 {
     private $storageBackend;
     private $resourceServer;
+    private $tokenSet;
 
     public function __construct(StorageInterface $storageBackend, ResourceServer $resourceServer)
     {
         $this->storageBackend = $storageBackend;
         $this->resourceServer = $resourceServer;
+        $this->tokenSet = false;
     }
 
     public function handleRequest(Request $request)
@@ -23,8 +25,11 @@ class RequestHandler
         $service = new Service($request);
 
         // if any authorization information is available, set it here
-        $this->resourceServer->setAuthorizationHeader($request->getHeader("Authorization"));
-        $this->resourceServer->setAccessTokenQueryParameter($request->getQueryParameter("access_token"));
+        if(!$this->tokenSet) {
+            $this->resourceServer->setAuthorizationHeader($request->getHeader("Authorization"));
+            $this->resourceServer->setAccessTokenQueryParameter($request->getQueryParameter("access_token"));
+            $this->tokenSet = true;
+        }
 
         $remoteStorage = new RemoteStorage($this->storageBackend, $this->resourceServer);
 

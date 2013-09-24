@@ -23,6 +23,18 @@ class RequestHandlerTest extends \PHPUnit_Framework_TestCase
                 null,
                 '{"active": true, "sub": "admin", "scope": "foo:rw"}'
             )
+        )->addResponse(
+            new \Guzzle\Http\Message\Response(
+                200,
+                null,
+                '{"active": true, "sub": "admin", "scope": "foo:rw"}'
+            )
+        )->addResponse(
+            new \Guzzle\Http\Message\Response(
+                200,
+                null,
+                '{"active": true, "sub": "admin", "scope": "foo:rw"}'
+            )
         );
         $client = new \Guzzle\Http\Client("https://auth.example.org/introspect");
         $client->addSubscriber($plugin);
@@ -78,9 +90,14 @@ class RequestHandlerTest extends \PHPUnit_Framework_TestCase
         $request->setHeader("Authorization", "Bearer foo");
 
         $response = $this->requestHandler->handleRequest($request);
-        // FIXME: statuscode should be 201
-        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(200, $response->getStatusCode()); // FIXME: statuscode should be 201
         $this->assertEquals(1, $response->getHeader("ETag"));
+        $response = $this->requestHandler->handleRequest($request);
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(2, $response->getHeader("ETag"));
+        $response = $this->requestHandler->handleRequest($request);
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(3, $response->getHeader("ETag"));
     }
 
     public function testDeleteDocument()

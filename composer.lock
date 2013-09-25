@@ -120,16 +120,16 @@
         },
         {
             "name": "fkooman/php-oauth-lib-rs",
-            "version": "0.6.0",
+            "version": "0.6.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/fkooman/php-oauth-lib-rs.git",
-                "reference": "1a1e67f51a61bc6e3cac5eae34fb43d0df409a21"
+                "reference": "b7bbd73dbb04ebafc0f249b1cd038a5c858b24d9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/fkooman/php-oauth-lib-rs/zipball/1a1e67f51a61bc6e3cac5eae34fb43d0df409a21",
-                "reference": "1a1e67f51a61bc6e3cac5eae34fb43d0df409a21",
+                "url": "https://api.github.com/repos/fkooman/php-oauth-lib-rs/zipball/b7bbd73dbb04ebafc0f249b1cd038a5c858b24d9",
+                "reference": "b7bbd73dbb04ebafc0f249b1cd038a5c858b24d9",
                 "shasum": ""
             },
             "require": {
@@ -154,7 +154,7 @@
                 }
             ],
             "description": "Library for implementing OAuth 2.0 resource servers",
-            "time": "2013-09-16 20:01:33"
+            "time": "2013-09-25 12:08:32"
         },
         {
             "name": "guzzle/guzzle",

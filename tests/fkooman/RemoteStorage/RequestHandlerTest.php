@@ -109,4 +109,20 @@ class RequestHandlerTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals(1, $response->getHeader("ETag"));
     }
+
+    public function testOptionsDocument()
+    {
+        $request = new Request("http://example.org/admin/foo/bar.txt", "OPTIONS");
+        $request->setPathInfo("/admin/foo/foo.txt");
+        $response = $this->requestHandler->handleRequest($request);
+        $this->assertEquals(200, $response->getStatusCode());
+    }
+
+    public function testOptionsFolder()
+    {
+        $request = new Request("http://example.org/admin/foo/", "OPTIONS");
+        $request->setPathInfo("/admin/foo/");
+        $response = $this->requestHandler->handleRequest($request);
+        $this->assertEquals(200, $response->getStatusCode());
+    }
 }

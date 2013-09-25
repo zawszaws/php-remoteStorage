@@ -85,19 +85,9 @@ class RequestHandler
             }
         );
 
-        // FIXME: make wildcard also match directories
         $service->match(
             "OPTIONS",
-            "/:pathInfo+",
-            function ($pathInfo) use ($request, $remoteStorage) {
-                return new OptionsResponse();
-            }
-        );
-
-        // FIXME: make wildcard also match directories
-        $service->match(
-            "OPTIONS",
-            "/:pathInfo+/",
+            "/:pathInfo+(/)",
             function ($pathInfo) use ($request, $remoteStorage) {
                 return new OptionsResponse();
             }

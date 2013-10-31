@@ -2,22 +2,22 @@
 
 namespace fkooman\RemoteStorage;
 
-use fkooman\RemoteStorage\Dummy\DummyStorage;
-use fkooman\RemoteStorage\File\NullMetadata;
+use fkooman\RemoteStorage\File\FileStorage;
+use fkooman\RemoteStorage\File\MockMetadata;
 
 use fkooman\RemoteStorage\Exception\FolderException;
 use fkooman\RemoteStorage\Exception\DocumentException;
 
-use fkooman\RemoteStorage\Document;
-use fkooman\RemoteStorage\Path;
-
-class DummyStorageTest extends \PHPUnit_Framework_TestCase
+class FileStorageTest2 extends \PHPUnit_Framework_TestCase
 {
+    private $baseDirectory;
     private $documentStorage;
 
     public function setUp()
     {
-        $this->documentStorage = new DummyStorage(new NullMetadata());
+        $this->baseDirectory = sys_get_temp_dir() . DIRECTORY_SEPARATOR . "remoteStorage_" . rand();
+        $this->documentStorage = new FileStorage(new MockMetadata(), $this->baseDirectory);
+
         $this->documentStorage->putDocument(
             new Path("/admin/foo/foo.txt"),
             new Document("Hello World!", "text/plain")
@@ -31,7 +31,7 @@ class DummyStorageTest extends \PHPUnit_Framework_TestCase
     public function testGetFolder()
     {
         $this->assertEquals(
-            '{"foo.txt":1,"bar\/":1}',
+            '{"bar\/":1,"foo.txt":1}',
             $this->documentStorage->getFolder(new Path("/admin/foo/"))->getContent()
         );
         $this->assertEquals(
@@ -101,5 +101,22 @@ class DummyStorageTest extends \PHPUnit_Framework_TestCase
     public function testGetFolderOnNonExistingFolder()
     {
         $this->documentStorage->getFolder(new Path("/folder/not/there/"));
+    }
+
+    public function tearDown()
+    {
+        $this->recursiveDelete($this->baseDirectory);
+    }
+
+    private function recursiveDelete($folderPath)
+    {
+        foreach (glob($folderPath . '/*') as $document) {
+            if (is_dir($document)) {
+                $this->recursiveDelete($document);
+            } else {
+                unlink($document);
+            }
+        }
+        @rmdir($folderPath);
     }
 }

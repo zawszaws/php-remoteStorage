@@ -2,9 +2,9 @@
 
 namespace fkooman\RemoteStorage;
 
-use fkooman\RemoteStorage\Dummy\DummyStorage;
+use fkooman\RemoteStorage\File\FileStorage;
 use fkooman\OAuth\ResourceServer\ResourceServer;
-use fkooman\RemoteStorage\File\NullMetadata;
+use fkooman\RemoteStorage\File\MockMetadata;
 
 use Guzzle\Http\Client;
 use Guzzle\Plugin\Mock\MockPlugin;
@@ -38,7 +38,10 @@ class RemoteStorageTest extends \PHPUnit_Framework_TestCase
         $resourceServer = new ResourceServer($client);
         $resourceServer->setAuthorizationHeader("Bearer foo");
 
-        $this->remoteStorage = new RemoteStorage(new DummyStorage(new NullMetadata()), $resourceServer);
+        $baseDirectory = sys_get_temp_dir() . DIRECTORY_SEPARATOR . "remoteStorage_" . rand();
+        $fileStorage = new FileStorage(new MockMetadata(), $baseDirectory);
+
+        $this->remoteStorage = new RemoteStorage($fileStorage, $resourceServer);
         $this->remoteStorage->putDocument(
             new Path("/admin/foo/bar.txt"),
             new Document("Hello World!", "text/plain", 5),

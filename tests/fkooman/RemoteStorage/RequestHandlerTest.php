@@ -2,10 +2,10 @@
 
 namespace fkooman\RemoteStorage;
 
-use fkooman\RemoteStorage\Dummy\DummyStorage;
+use fkooman\RemoteStorage\File\FileStorage;
 use fkooman\OAuth\ResourceServer\ResourceServer;
 use fkooman\Http\Request;
-use fkooman\RemoteStorage\File\NullMetadata;
+use fkooman\RemoteStorage\File\MockMetadata;
 use fkooman\RemoteStorage\Document;
 use fkooman\RemoteStorage\Path;
 
@@ -41,7 +41,9 @@ class RequestHandlerTest extends \PHPUnit_Framework_TestCase
 
         $resourceServer = new ResourceServer($client);
 
-        $documentStore = new DummyStorage(new NullMetadata());
+        $baseDirectory = sys_get_temp_dir() . DIRECTORY_SEPARATOR . "remoteStorage_" . rand();
+        $documentStore = new FileStorage(new MockMetadata(), $baseDirectory);
+
         $documentStore->putDocument(
             new Path("/admin/foo/foo.txt"),
             new Document("Hello World!", "text/plain")

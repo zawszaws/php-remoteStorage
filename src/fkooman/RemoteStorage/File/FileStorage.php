@@ -6,6 +6,10 @@ use fkooman\RemoteStorage\StorageInterface;
 use fkooman\RemoteStorage\Path;
 use fkooman\RemoteStorage\Document;
 use fkooman\RemoteStorage\Folder;
+
+use fkooman\RemoteStorage\Exception\FolderException;
+use fkooman\RemoteStorage\Exception\DocumentException;
+
 use fkooman\RemoteStorage\File\Exception\FileStorageException;
 
 class FileStorage implements StorageInterface
@@ -22,13 +26,18 @@ class FileStorage implements StorageInterface
         $this->storageRoot = $storageRoot;
     }
 
-    public function getFolder(Path $path)
+    public function getFolder(Path $folderPath)
     {
+        $folderPath = $this->sanitizePath($folderPath);
+
+        if (!$folderPath->getIsFolder()) {
+            throw new FolderException("not a folder");
+        }
         $folderPath = $this->storageRoot . $path->getPath();
 
         $currentFolder = getcwd();
         if (false === @chdir($folderPath)) {
-            throw new FileStorageException("unable to change to folder");
+            throw new FolderException("folder not found");
         }
         $folderList = array();
         foreach (glob("*", GLOB_MARK) as $entry) {
@@ -45,11 +54,18 @@ class FileStorage implements StorageInterface
 
     public function getDocument(Path $path)
     {
+        if (!$path->getIsDocument()) {
+            throw new DocumentException("not a document");
+        }
         $documentPath = $this->storageRoot . $path->getPath();
 
         if (is_dir($documentPath)) {
-            throw new FileStorageException("path points to folder, not document");
+            throw new DocumentException("path points to folder, not document");
         }
+        if (!is_file($documentPath)) {
+            throw new DocumentException("document not found");
+        }
+
         $documentContent = @file_get_contents($documentPath);
         if (false === $documentContent) {
             throw new FileStorageException("unable to read document");
@@ -94,6 +110,10 @@ class FileStorage implements StorageInterface
 
         $documentPath = $this->storageRoot . $path->getPath();
 
+        if(!is_file($documentPath)) {
+            throw new DocumentException("document not found");
+        }
+
         // FIXME:
         // if delete failed because not exists --> 404
         // if delete failed because folder --> 400
@@ -105,6 +125,18 @@ class FileStorage implements StorageInterface
     private function createFolder($folderPath)
     {
         return @mkdir($folderPath, 0775, true);
+    }
+
+    /**
+     * Sanitizes the path: 
+     * # adds the storage root to it
+     * # makes sure it is a valid path
+     * # makes sure it is inside the storage root
+     * # FIXME: storageRoot MUST include the userid for this to work safely?!
+     */
+    private function sanitizePath(Path $p)
+    {
+
     }
 
     /*

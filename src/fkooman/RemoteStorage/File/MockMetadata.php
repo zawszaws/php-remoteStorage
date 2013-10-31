@@ -4,7 +4,7 @@ namespace fkooman\RemoteStorage\File;
 
 use fkooman\RemoteStorage\Path;
 
-class NullMetadata implements MetadataInterface
+class MockMetadata implements MetadataInterface
 {
     private $metadataDb;
 
